@@ -556,10 +556,92 @@
     body.nav-open .sidebar-scrim { opacity: 1; pointer-events: auto; }
     .main { margin-left: 0; padding-top: 74px; }
   }
-  @media print { #loader, #succession, #appsView, .detail-scrim, .sidebar, .fab-wrap, .panel, .scrim, .top-actions, .menu-btn { display: none !important; } .main { margin: 0; } }
+  /* ---------------- SCROLL TO TOP ---------------- */
+  #toTop {
+    position: fixed; left: 24px; bottom: 24px; z-index: 55; width: 46px; height: 46px; border-radius: 50%;
+    border: none; cursor: pointer; display: grid; place-items: center; color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    box-shadow: 0 12px 26px -10px color-mix(in srgb, var(--accent) 70%, transparent);
+    opacity: 0; visibility: hidden; transform: translateY(14px) scale(.85);
+    transition: opacity .3s ease, transform .3s cubic-bezier(.2,1.3,.4,1), visibility .3s ease;
+  }
+  #toTop.show { opacity: 1; visibility: visible; transform: none; }
+  #toTop:hover { transform: translateY(-3px); }
+  #toTop svg { width: 22px; height: 22px; }
+
+  /* ---------------- CUSTOM CURSOR ---------------- */
+  @media (hover: hover) and (pointer: fine) {
+    body:not([data-cursor="off"]) * { cursor: none !important; }
+    .cursor-dot, .cursor-ring { position: fixed; top: 0; left: 0; z-index: 3000; pointer-events: none; }
+    .cursor-dot, .cursor-ring { display: none; }
+    /* the JS sets left/top; these hold the visual so CSS scale never fights JS position */
+    .cursor-dot i, .cursor-ring i { display: block; width: 100%; height: 100%; }
+
+    /* ---- RING style (dot + trailing ring) ---- */
+    body[data-cursor="ring"] .cursor-dot { display: block; width: 8px; height: 8px; margin: -4px 0 0 -4px; }
+    body[data-cursor="ring"] .cursor-dot i { border-radius: 50%; background: var(--accent); transition: transform .15s ease, background .2s ease; }
+    body[data-cursor="ring"] .cursor-ring { display: block; width: 34px; height: 34px; margin: -17px 0 0 -17px; }
+    body[data-cursor="ring"] .cursor-ring i { border-radius: 50%; border: 2px solid color-mix(in srgb, var(--accent) 60%, transparent); transition: transform .18s cubic-bezier(.2,.8,.2,1), border-color .2s ease, background .2s ease, box-shadow .2s ease; }
+    body[data-cursor="ring"] .cursor-ring.hot i { transform: scale(1.6); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); box-shadow: 0 0 16px color-mix(in srgb, var(--accent) 45%, transparent); }
+    body[data-cursor="ring"] .cursor-dot.hot i { transform: scale(1.7); }
+    body[data-cursor="ring"] .cursor-ring.click i { transform: scale(1.1); }
+    body[data-cursor="ring"] .cursor-dot.click i { transform: scale(.6); }
+
+    /* ---- ARROW style (pointer that reacts on hover + click) ---- */
+    body[data-cursor="arrow"] .cursor-dot { display: block; width: 24px; height: 24px; margin: -2px 0 0 -2px; }
+    body[data-cursor="arrow"] .cursor-dot i {
+      background: var(--accent);
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,.35));
+      transition: transform .16s cubic-bezier(.34,1.56,.5,1), filter .2s ease, background .2s ease;
+      transform-origin: 4px 3px;
+      -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.2 2.6a1.4 1.4 0 0 1 1.9-.5l12.4 7.2a1.3 1.3 0 0 1-.3 2.4l-5.1 1.2a1.3 1.3 0 0 0-.9.8l-1.9 5a1.3 1.3 0 0 1-2.4.1L4.9 4.5a1.4 1.4 0 0 1 .3-1.9z" fill="black" stroke="black" stroke-width="1.4" stroke-linejoin="round"/></svg>') no-repeat center / contain;
+              mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M5.2 2.6a1.4 1.4 0 0 1 1.9-.5l12.4 7.2a1.3 1.3 0 0 1-.3 2.4l-5.1 1.2a1.3 1.3 0 0 0-.9.8l-1.9 5a1.3 1.3 0 0 1-2.4.1L4.9 4.5a1.4 1.4 0 0 1 .3-1.9z" fill="black" stroke="black" stroke-width="1.4" stroke-linejoin="round"/></svg>') no-repeat center / contain;
+    }
+    /* hover: pointer perks up, tilts and grows with a brighter glow */
+    body[data-cursor="arrow"] .cursor-dot.hot i {
+      transform: scale(1.28) rotate(-12deg);
+      filter: drop-shadow(0 3px 8px color-mix(in srgb, var(--accent) 60%, transparent));
+    }
+    /* click: quick, springy press-in */
+    body[data-cursor="arrow"] .cursor-dot.click i { transform: scale(.8) rotate(-4deg); }
+    body[data-cursor="arrow"] .cursor-dot.hot.click i { transform: scale(1.02) rotate(-12deg); }
+    body[data-cursor="arrow"] .cursor-ring { display: none; }
+
+    /* ---- GLOW style (soft glowing orb) ---- */
+    body[data-cursor="glow"] .cursor-dot { display: block; width: 12px; height: 12px; margin: -6px 0 0 -6px; }
+    body[data-cursor="glow"] .cursor-dot i { border-radius: 50%; background: radial-gradient(circle, #fff, var(--accent)); box-shadow: 0 0 12px 4px color-mix(in srgb, var(--accent) 70%, transparent); transition: transform .14s ease; }
+    body[data-cursor="glow"] .cursor-ring { display: block; width: 40px; height: 40px; margin: -20px 0 0 -20px; }
+    body[data-cursor="glow"] .cursor-ring i { border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--accent) 24%, transparent), transparent 70%); transition: transform .2s cubic-bezier(.2,.8,.2,1); }
+    body[data-cursor="glow"] .cursor-ring.hot i { transform: scale(1.6); }
+    body[data-cursor="glow"] .cursor-dot.hot i { transform: scale(1.4); }
+    body[data-cursor="glow"] .cursor-dot.click i { transform: scale(2); }
+    body[data-cursor="glow"] .cursor-ring.click i { transform: scale(1.3); }
+  }
+  body.reduce-motion .cursor-ring i, body.reduce-motion .cursor-dot i { transition: none; }
+
+  /* cursor picker swatches in settings */
+  .cursors { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .cur-opt {
+    flex: 1; min-width: 64px; border: 1px solid var(--line); background: transparent; border-radius: 12px;
+    padding: 12px 6px; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 12px; color: var(--ink);
+    display: flex; flex-direction: column; align-items: center; gap: 8px; transition: all .18s ease;
+  }
+  .cur-opt:hover { border-color: var(--accent); }
+  .cur-opt.active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--accent); }
+  .cur-opt .prev { width: 26px; height: 26px; display: grid; place-items: center; }
+  .cur-opt .prev svg { width: 22px; height: 22px; }
+
+  @media print { #loader, #succession, #appsView, .detail-scrim, .sidebar, .fab-wrap, .panel, .scrim, .top-actions, .menu-btn, #toTop, .cursor-dot, .cursor-ring { display: none !important; } .main { margin: 0; } }
 </style>
 </head>
-<body data-theme="light" data-accent="royal">
+<body data-theme="light" data-accent="royal" data-cursor="arrow">
+
+<!-- CUSTOM CURSOR -->
+<div class="cursor-dot" id="cursorDot"><i></i></div>
+<div class="cursor-ring" id="cursorRing"><i></i></div>
+
+<!-- SCROLL TO TOP -->
+<button id="toTop" aria-label="Scroll to top"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
 
 <!-- LOADING SCREEN -->
 <div id="loader">
@@ -666,6 +748,14 @@
     <div class="set-row">
       <div><div class="lbl">Reduce motion</div><div class="sub">Turn off entry &amp; hover animations</div></div>
       <div class="switch" id="motionSwitch"></div>
+    </div>
+
+    <div class="set-title">Cursor</div>
+    <div class="cursors" id="cursorPicker">
+      <button class="cur-opt" data-cursor="arrow"><span class="prev"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 2l7 18 2.5-7.5L21 10z"/></svg></span>Arrow</button>
+      <button class="cur-opt" data-cursor="ring"><span class="prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/></svg></span>Ring</button>
+      <button class="cur-opt" data-cursor="glow"><span class="prev"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".4"/></svg></span>Glow</button>
+      <button class="cur-opt" data-cursor="off"><span class="prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l16 16M20 4L4 20"/></svg></span>Off</button>
     </div>
 
     <div class="set-title">Admin</div>
@@ -1006,7 +1096,7 @@ copyBtn.onclick = async () => {
 };
 
 document.getElementById('clearPrefsBtn').onclick = () => {
-  ['mode','accent','glass','motion'].forEach(k => localStorage.removeItem('lac_'+k));
+  ['mode','accent','glass','motion','cursor'].forEach(k => localStorage.removeItem('lac_'+k));
   location.reload();
 };
 
@@ -1303,6 +1393,46 @@ function openDetail(ix, fromEl){
 function closeDetail(){ detailScrim.classList.remove('open'); }
 detailScrim.addEventListener('click', e => { if (e.target === detailScrim) closeDetail(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && appsView.classList.contains('open')) { if (detailScrim.classList.contains('open')) closeDetail(); else closeApps(); } });
+
+/* ================= SCROLL TO TOP ================= */
+const toTop = document.getElementById('toTop');
+function checkScroll(){ if (window.scrollY > 300) toTop.classList.add('show'); else toTop.classList.remove('show'); }
+window.addEventListener('scroll', checkScroll, { passive: true });
+checkScroll();
+toTop.onclick = () => window.scrollTo({ top: 0, behavior: document.body.classList.contains('reduce-motion') ? 'auto' : 'smooth' });
+
+/* ================= CUSTOM CURSOR ================= */
+(function(){
+  if (!window.matchMedia || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  const dot = document.getElementById('cursorDot');
+  const ring = document.getElementById('cursorRing');
+  let rx = 0, ry = 0, mx = 0, my = 0;
+  window.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    dot.style.transform = `translate(${mx}px, ${my}px)`;
+  });
+  function follow(){
+    rx += (mx - rx) * 0.18; ry += (my - ry) * 0.18;
+    ring.style.transform = `translate(${rx}px, ${ry}px)`;
+    requestAnimationFrame(follow);
+  }
+  requestAnimationFrame(follow);
+  const hot = 'a, button, .app, .course, .nav-item, .switch, .sw, .cur-opt, .seg button, input, textarea, [role="button"]';
+  document.addEventListener('mouseover', e => { if (e.target.closest(hot)) { ring.classList.add('hot'); dot.classList.add('hot'); } });
+  document.addEventListener('mouseout', e => { if (e.target.closest(hot)) { ring.classList.remove('hot'); dot.classList.remove('hot'); } });
+  document.addEventListener('mousedown', () => { ring.classList.add('click'); dot.classList.add('click'); });
+  document.addEventListener('mouseup', () => { ring.classList.remove('click'); dot.classList.remove('click'); });
+})();
+
+/* cursor picker in settings */
+const cursorPicker = document.getElementById('cursorPicker');
+function applyCursor(c){
+  document.body.dataset.cursor = c;
+  cursorPicker.querySelectorAll('.cur-opt').forEach(b => b.classList.toggle('active', b.dataset.cursor === c));
+  save('cursor', c);
+}
+cursorPicker.querySelectorAll('.cur-opt').forEach(b => b.onclick = () => applyCursor(b.dataset.cursor));
+applyCursor(store('cursor') || 'arrow');
 
 /* ================= LOADING SCREEN ================= */
 const loader = document.getElementById('loader');
