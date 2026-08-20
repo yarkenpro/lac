@@ -782,11 +782,9 @@
     <!-- tools (hidden until unlocked) -->
     <div id="adminTools" style="display:none">
       <div class="set-title">Maintenance mode</div>
-      <div class="set-row">
-        <div><div class="lbl">Site under maintenance</div><div class="sub">Shows a maintenance screen to visitors</div></div>
-        <div class="switch" id="maintSwitch"></div>
-      </div>
-      <button class="admin-btn" id="maintSave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Save maintenance setting</button>
+      <p style="font-size:13px;color:var(--muted);line-height:1.55">To put the site under maintenance for <b>everyone</b>, open <code>index.html</code> in your GitHub repo, find the line near the top of the script:</p>
+      <div style="font-family:ui-monospace,Menlo,monospace;font-size:12.5px;background:color-mix(in srgb,var(--ink) 6%,transparent);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0;color:var(--ink)">const MAINTENANCE = <b>false</b>;</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.55">Change <code>false</code> to <code>true</code> and commit. Set it back to <code>false</code> to bring the site back.</p>
 
       <div class="set-title">Get the code</div>
       <button class="admin-btn" id="copyHtmlBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span id="copyHtmlLabel">Copy HTML</span></button>
@@ -852,6 +850,14 @@
 
 <script>
 /* ================= DATA ================= */
+
+/* ===================================================================
+   GLOBAL MAINTENANCE SWITCH  (affects EVERYONE who visits the site)
+   To take the whole site down for maintenance: change false to true,
+   then commit index.html on GitHub. To bring it back: set it to false.
+   =================================================================== */
+const MAINTENANCE = false;
+
 const BASE = "https://learn.sasc.nsw.edu.au";
 
 /* ---- Succession launch transition ---- */
@@ -977,8 +983,8 @@ document.getElementById('dateline').textContent = `${days[now.getDay()]}, ${now.
 const body = document.body;
 const store = k => localStorage.getItem('lac_'+k);
 const save = (k,v) => localStorage.setItem('lac_'+k, v);
-// apply saved maintenance state immediately
-if (localStorage.getItem('lac_maint') === '1') body.classList.add('maint');
+// apply maintenance: the global flag (everyone) OR this device's own toggle
+if (MAINTENANCE || localStorage.getItem('lac_maint') === '1') body.classList.add('maint');
 
 // mode
 const modeSeg = document.getElementById('modeSeg');
@@ -1100,19 +1106,9 @@ document.getElementById('clearPrefsBtn').onclick = () => {
   location.reload();
 };
 
-/* ---- Maintenance mode (saves in this browser) ---- */
-const maintSwitch = document.getElementById('maintSwitch');
-let maintOn = localStorage.getItem('lac_maint') === '1';
-function paintMaint(){ maintSwitch.classList.toggle('on', maintOn); }
-maintSwitch.onclick = () => { maintOn = !maintOn; paintMaint(); };
-paintMaint();
-document.getElementById('maintSave').onclick = () => {
-  localStorage.setItem('lac_maint', maintOn ? '1' : '0');
-  body.classList.toggle('maint', maintOn);
-  const s = document.getElementById('maintSave');
-  const old = s.innerHTML; s.textContent = 'Saved ✓';
-  setTimeout(() => { s.innerHTML = old; }, 1600);
-};
+/* ---- Maintenance is controlled by the MAINTENANCE flag at the top of this file ---- */
+let maintOn = MAINTENANCE || localStorage.getItem('lac_maint') === '1';
+function paintMaint(){}
 
 /* ---- Escape hatch: turn maintenance off from the maintenance screen itself ---- */
 const maintAdminBtn = document.getElementById('maintAdminBtn');
