@@ -56,12 +56,14 @@
   }
   @keyframes crestIn { from { transform: scale(.4) rotate(-14deg); opacity: 0; } to { transform: scale(1) rotate(0); opacity: 1; } }
   @keyframes crestFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+  /* sheen sweep across crest */
   .loader-crest::after {
     content: ""; position: absolute; inset: 0; border-radius: inherit; overflow: hidden;
     background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,.55) 50%, transparent 65%);
     background-size: 250% 250%; animation: crestSheen 2.2s ease-in-out .6s infinite;
   }
   @keyframes crestSheen { 0% { background-position: 150% 0; } 60%,100% { background-position: -80% 0; } }
+  /* orbiting ring of dots */
   .loader-ring { position: absolute; inset: -18px; animation: spin 3.4s linear infinite; }
   .loader-ring span { position: absolute; top: 50%; left: 50%; width: 7px; height: 7px; border-radius: 50%; background: var(--accent2); }
   .loader-ring span:nth-child(1){ transform: rotate(0deg) translateX(64px); }
@@ -83,7 +85,48 @@
   .loader-text, .loader-bar { animation: fadeUp .6s ease .35s both; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 
+  /* animated colour field that the glass blurs, this is what makes liquid glass read */
   .bg-orbs { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+
+  /* ---------------- MAINTENANCE SCREEN ---------------- */
+  #maintScreen {
+    position: fixed; inset: 0; z-index: 2000; display: none; place-items: center; text-align: center; padding: 24px;
+    background:
+      radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--accent) 34%, transparent), transparent 46%),
+      radial-gradient(circle at 75% 85%, color-mix(in srgb, var(--accent2) 30%, transparent), transparent 48%),
+      var(--bg);
+    color: var(--ink);
+  }
+  body.maint #maintScreen { display: grid; }
+  .maint-inner { max-width: 460px; }
+  .maint-icon {
+    width: 92px; height: 92px; border-radius: 26px; margin: 0 auto 22px; display: grid; place-items: center;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    box-shadow: 0 20px 50px -14px color-mix(in srgb, var(--accent) 70%, transparent);
+    animation: crestFloat 3s ease-in-out infinite;
+  }
+  .maint-icon svg { width: 46px; height: 46px; }
+  .maint-inner h1 { font-size: clamp(28px,6vw,42px); font-weight: 800; letter-spacing: -.02em; margin-bottom: 12px; }
+  .maint-inner p { color: var(--muted); font-size: 16px; line-height: 1.55; }
+  .maint-admin {
+    margin-top: 26px; border: 1px solid var(--line); background: transparent; color: var(--muted);
+    font-family: inherit; font-weight: 700; font-size: 13px; padding: 9px 18px; border-radius: 30px; cursor: pointer;
+    transition: all .18s ease;
+  }
+  .maint-admin:hover { border-color: var(--accent); color: var(--accent); }
+  .maint-adminbox { display: none; margin: 16px auto 0; max-width: 300px; }
+  .maint-adminbox.show { display: block; }
+  .maint-adminbox input {
+    width: 100%; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+    font-family: inherit; font-size: 14px; background: color-mix(in srgb, var(--card) 80%, transparent); color: var(--ink); text-align: center;
+  }
+  .maint-adminbox input:focus { outline: none; border-color: var(--accent); }
+  .maint-adminbox button {
+    width: 100%; margin-top: 10px; border: none; background: var(--accent); color: #fff; border-radius: 12px;
+    padding: 12px; cursor: pointer; font-weight: 700; font-family: inherit; font-size: 14px;
+  }
+  .maint-err { color: #e5484d; font-size: 13px; margin-top: 10px; font-weight: 600; display: none; }
+  .maint-err.show { display: block; }
 
   /* ---------------- SUCCESSION LAUNCH TRANSITION ---------------- */
   #succession {
@@ -123,11 +166,13 @@
   .orb.o3 { width: 34vw; height: 34vw; background: #f0c94b;        bottom: -8vw; left: 20vw; animation: float3 30s ease-in-out infinite; }
   .orb.o4 { width: 30vw; height: 30vw; background: #e86aa6;        bottom: 6vh; right: 12vw; animation: float1 34s ease-in-out infinite reverse; }
   [data-theme="dark"] .orb { opacity: .4; }
+  /* glass off = flat theme, calm the colour field right down */
   body.no-glass .orb { opacity: .12; filter: blur(90px); }
   @keyframes float1 { 0%,100%{ transform: translate(0,0) scale(1);} 50%{ transform: translate(6vw,8vh) scale(1.15);} }
   @keyframes float2 { 0%,100%{ transform: translate(0,0) scale(1);} 50%{ transform: translate(-8vw,6vh) scale(1.1);} }
   @keyframes float3 { 0%,100%{ transform: translate(0,0) scale(1);} 50%{ transform: translate(5vw,-6vh) scale(1.2);} }
   body.reduce-motion .orb { animation: none !important; }
+
   /* ---------- LIQUID GLASS ---------- */
   .glass {
     position: relative;
@@ -147,6 +192,7 @@
       0 8px 32px -8px rgba(0,0,0,.5),
       inset 0 1px 1px color-mix(in srgb, #fff 16%, transparent);
   }
+  /* specular sheen sweeping across glass */
   .glass::before {
     content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0;
     background: linear-gradient(115deg, transparent 30%, color-mix(in srgb, #fff 28%, transparent) 46%, transparent 62%);
@@ -156,6 +202,7 @@
   @keyframes sheen { from { background-position: 120% 0; } to { background-position: -60% 0; } }
   .glass > * { position: relative; z-index: 1; }
 
+  /* GLASS OFF, fully reset so the toggle always visibly works */
   body.no-glass .glass {
     background: var(--card) !important;
     backdrop-filter: none !important;
@@ -165,6 +212,7 @@
   }
   body.no-glass .glass::before { display: none !important; }
   body.reduce-motion .glass:hover::before { animation: none; }
+  /* also strip blur from any other frosted chrome when glass is off */
   body.no-glass .menu-btn { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: var(--card) !important; }
 
   /* ---------------- SIDEBAR NAV ---------------- */
@@ -173,11 +221,12 @@
     display: flex; flex-direction: column; padding: 18px 0; gap: 4px;
     transition: transform .35s cubic-bezier(.2,.8,.2,1);
     border-radius: 0 var(--radius) var(--radius) 0; overflow-y: auto;
+    /* flat vertical glass so no diagonal seam appears on the tall panel */
     background: color-mix(in srgb, var(--card) 72%, transparent) !important;
     border-right: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
     border-top: none; border-bottom: none; border-left: none;
   }
-  .sidebar::before { display: none !important; }
+  .sidebar::before { display: none !important; } /* kill the diagonal sheen streak here */
   body.no-glass .sidebar { background: var(--card) !important; border-right-color: var(--line); }
   [data-theme="dark"] .sidebar { border-right-color: color-mix(in srgb, #fff 10%, transparent); }
   .brand { display: flex; align-items: center; gap: 12px; padding: 6px 20px 16px; }
@@ -198,6 +247,7 @@
   [data-theme="dark"] .nav-item:hover, [data-theme="dark"] .nav-item.active { color: var(--accent2); }
   .nav-spacer { flex: 1; min-height: 10px; }
 
+  /* hamburger, hidden on desktop */
   .menu-btn { display: none; }
   .sidebar-scrim { display: none; }
 
@@ -214,6 +264,7 @@
   @keyframes shimmer { to { background-position: 220% center; } }
   body.reduce-motion .hello h1 { animation: none; }
 
+  /* sidebar nav entrance */
   .sidebar .nav-item, .sidebar .brand { animation: navIn .5s cubic-bezier(.2,.8,.2,1) backwards; }
   .sidebar .brand { animation-delay: .05s; }
   .sidebar .nav-item:nth-of-type(1){animation-delay:.1s;} .sidebar .nav-item:nth-of-type(2){animation-delay:.16s;}
@@ -257,6 +308,7 @@
   .search input:focus { outline: 2px solid var(--accent); }
   .search svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--muted); z-index: 2; pointer-events: none; }
 
+  /* stat row */
   .stats { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 14px; margin: 22px 0 28px; }
   .stat { border-radius: 16px; padding: 16px 18px; position: relative; overflow: hidden; }
   .stat .k { font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
@@ -282,6 +334,7 @@
   }
   .course.in { opacity: 1; transform: none; }
   .course:hover { transform: translateY(-6px); box-shadow: 0 30px 54px -22px rgba(26,34,56,.4); }
+  /* dark mode: sit flat on the background instead of floating with a heavy shadow */
   [data-theme="dark"] .course { box-shadow: 0 1px 0 rgba(0,0,0,.4); border-color: color-mix(in srgb, #fff 10%, transparent); }
   [data-theme="dark"] .course:hover { box-shadow: 0 14px 30px -18px rgba(0,0,0,.7); border-color: color-mix(in srgb, #fff 18%, transparent); }
   .course .banner { height: 78px; position: relative; overflow: hidden; flex: none; }
@@ -341,6 +394,7 @@
   .panel-h .x { border: none; background: transparent; cursor: pointer; color: var(--muted); font-size: 24px; line-height: 1; }
   .panel-b { padding: 20px 22px; overflow-y: auto; flex: 1; }
 
+  /* settings controls */
   .set-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--line); }
   .set-row .lbl { font-weight: 700; font-size: 14px; }
   .set-row .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
@@ -358,6 +412,25 @@
   .set-title { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); margin: 22px 0 4px; }
   .set-title:first-child { margin-top: 0; }
 
+  /* admin */
+  .admin-btn {
+    display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 10px; padding: 13px 16px;
+    border-radius: 12px; border: 1px solid var(--line); background: transparent; color: var(--ink);
+    font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer; transition: all .18s ease;
+  }
+  .admin-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+  .admin-btn svg { width: 18px; height: 18px; flex: none; }
+  .admin-lockrow { display: flex; gap: 8px; margin-top: 10px; }
+  .admin-lockrow input {
+    flex: 1; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+    font-family: inherit; font-size: 14px; background: transparent; color: var(--ink);
+  }
+  .admin-lockrow input:focus { outline: none; border-color: var(--accent); }
+  .admin-lockrow button { border: none; background: var(--accent); color: #fff; border-radius: 12px; padding: 0 18px; cursor: pointer; font-weight: 700; font-family: inherit; }
+  .admin-err { color: #e5484d; font-size: 13px; margin-top: 10px; font-weight: 600; display: none; }
+  .admin-err.show { display: block; }
+
+  /* chat */
   .chat-b { display: flex; flex-direction: column; gap: 12px; }
   .cmsg { max-width: 86%; padding: 11px 14px; border-radius: 15px; font-size: 14px; line-height: 1.45; }
   .cmsg.bot { background: color-mix(in srgb, var(--accent) 12%, transparent); border-bottom-left-radius: 4px; align-self: flex-start; }
@@ -581,8 +654,10 @@
       <button data-mode="dark">🌙 Dark</button>
       <button data-mode="auto">🖥️ Auto</button>
     </div>
+
     <div class="set-title">Accent theme</div>
     <div class="swatches" id="swatches"></div>
+
     <div class="set-title">Effects</div>
     <div class="set-row">
       <div><div class="lbl">Liquid glass</div><div class="sub">Frosted blur on panels &amp; cards</div></div>
@@ -592,8 +667,61 @@
       <div><div class="lbl">Reduce motion</div><div class="sub">Turn off entry &amp; hover animations</div></div>
       <div class="switch" id="motionSwitch"></div>
     </div>
+
+    <div class="set-title">Admin</div>
+    <button class="admin-btn" id="adminBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Open Admin</button>
+
     <div class="set-title">About</div>
     <p style="font-size:13px;color:var(--muted);line-height:1.5">A reimagined dashboard for Leppington Anglican College. Your preferences save automatically in this browser. All course links open the live SASC Learn site where you're signed in.</p>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="panel" id="adminPanel">
+  <div class="panel-h"><h2>Admin</h2><button class="x" data-close-admin>&times;</button></div>
+  <div class="panel-b">
+    <!-- lock screen -->
+    <div id="adminLock">
+      <div class="set-title">Enter password</div>
+      <div class="admin-lockrow">
+        <input id="adminPass" type="password" placeholder="Password" autocomplete="off">
+        <button id="adminUnlock">Unlock</button>
+      </div>
+      <div id="adminErr" class="admin-err">Wrong password, try again.</div>
+    </div>
+    <!-- tools (hidden until unlocked) -->
+    <div id="adminTools" style="display:none">
+      <div class="set-title">Maintenance mode</div>
+      <div class="set-row">
+        <div><div class="lbl">Site under maintenance</div><div class="sub">Shows a maintenance screen to visitors</div></div>
+        <div class="switch" id="maintSwitch"></div>
+      </div>
+      <button class="admin-btn" id="maintSave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>Save maintenance setting</button>
+
+      <div class="set-title">Get the code</div>
+      <button class="admin-btn" id="copyHtmlBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span id="copyHtmlLabel">Copy HTML</span></button>
+      <textarea id="htmlBox" readonly spellcheck="false" style="width:100%;height:160px;margin-top:10px;border:1px solid var(--line);border-radius:12px;padding:12px;font-family:ui-monospace,Menlo,monospace;font-size:11px;background:transparent;color:var(--ink);resize:vertical;display:none"></textarea>
+
+      <div class="set-title">Other</div>
+      <button class="admin-btn" id="clearPrefsBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>Reset saved settings</button>
+      <button class="admin-btn" id="adminLock2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Lock admin</button>
+      <p style="font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:14px"><b>Copy HTML</b> shows this page's code below and copies it. If copy is blocked, tap inside the box, select all, and copy manually.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MAINTENANCE SCREEN -->
+<div id="maintScreen">
+  <div class="maint-inner">
+    <div class="maint-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18v3h3l6.3-6.3a4 4 0 0 0 5.4-5.4l-2.3 2.3-2-2 2.3-2.3z"/></svg></div>
+    <h1>We'll be right back</h1>
+    <p>The Leppington Anglican College dashboard is under maintenance. Please check back soon.</p>
+    <button class="maint-admin" id="maintAdminBtn">Admin</button>
+    <div class="maint-adminbox" id="maintAdminBox">
+      <input id="maintPass" type="password" placeholder="Admin code" autocomplete="off">
+      <button id="maintUnlock">Turn off maintenance</button>
+      <div class="maint-err" id="maintErr">Wrong code.</div>
+    </div>
   </div>
 </div>
 
@@ -654,6 +782,7 @@ let succBusy = false;
 function launch(url, opts={}){
   const { name="Opening…", color="#2f5fd6", logo="", tips=[] } = opts;
   if (succBusy) return; succBusy = true;
+  // Play the Succession animation INSIDE the dashboard, then open the site in a new tab after 2s.
   succLogo.style.background = `linear-gradient(135deg, ${color}, color-mix(in srgb, ${color} 60%, white))`;
   succLogo.innerHTML = logo || '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14L21 3"/></svg>';
   succLabel.textContent = name === "Opening…" ? name : `Opening ${name}…`;
@@ -662,7 +791,7 @@ function launch(url, opts={}){
   succ.classList.add('go');
   setTimeout(() => {
     const win = window.open(url, '_blank', 'noopener');
-    if (!win) location.href = url;
+    if (!win) location.href = url; // fallback if the tab was blocked
     setTimeout(() => { succ.classList.remove('go'); succBusy = false; }, 450);
   }, 2000);
 }
@@ -758,7 +887,10 @@ document.getElementById('dateline').textContent = `${days[now.getDay()]}, ${now.
 const body = document.body;
 const store = k => localStorage.getItem('lac_'+k);
 const save = (k,v) => localStorage.setItem('lac_'+k, v);
+// apply saved maintenance state immediately
+if (localStorage.getItem('lac_maint') === '1') body.classList.add('maint');
 
+// mode
 const modeSeg = document.getElementById('modeSeg');
 function applyMode(mode) {
   let theme = mode;
@@ -772,8 +904,11 @@ function applyMode(mode) {
 }
 modeSeg.querySelectorAll('button').forEach(b => b.onclick = () => applyMode(b.dataset.mode));
 applyMode(store('mode') || 'light');
+
+// quick toggle button cycles light/dark
 document.getElementById('btnTheme').onclick = () => applyMode(body.dataset.theme === 'dark' ? 'light' : 'dark');
 
+// accents
 const accents = [
   {k:'royal', c:'#2f5fd6'},{k:'forest', c:'#1f9d6b'},{k:'berry', c:'#c0397a'},
   {k:'sunset', c:'#e2703a'},{k:'mono', c:'#3a4256'}
@@ -787,16 +922,19 @@ accents.forEach(a => {
 });
 applyAccent(store('accent') || 'royal');
 
+// glass
 const glassSwitch = document.getElementById('glassSwitch');
 let glassOn = store('glass') !== '0';
 function applyGlass(on){ glassOn = on; body.classList.toggle('no-glass', !on); glassSwitch.classList.toggle('on', on); save('glass', on?'1':'0'); }
 glassSwitch.onclick = () => applyGlass(!glassOn);
 applyGlass(glassOn);
 
+// motion
 const motionSwitch = document.getElementById('motionSwitch');
 function applyMotion(reduce){ body.classList.toggle('reduce-motion', reduce); motionSwitch.classList.toggle('on', reduce); save('motion', reduce?'1':'0'); }
 motionSwitch.onclick = () => applyMotion(!body.classList.contains('reduce-motion'));
 applyMotion(store('motion') === '1');
+// reduce-motion CSS
 const rmStyle = document.createElement('style');
 rmStyle.textContent = '.reduce-motion *{animation:none!important;transition:none!important;}';
 document.head.appendChild(rmStyle);
@@ -805,13 +943,104 @@ document.head.appendChild(rmStyle);
 const scrim = document.getElementById('scrim');
 const settingsPanel = document.getElementById('settingsPanel');
 const chatPanel = document.getElementById('chatPanel');
+const adminPanel = document.getElementById('adminPanel');
 function openPanel(p){ p.classList.add('open'); scrim.classList.add('open'); }
-function closePanels(){ settingsPanel.classList.remove('open'); chatPanel.classList.remove('open'); scrim.classList.remove('open'); }
+function closePanels(){ settingsPanel.classList.remove('open'); chatPanel.classList.remove('open'); adminPanel.classList.remove('open'); scrim.classList.remove('open'); }
 document.getElementById('btnSettings').onclick = () => openPanel(settingsPanel);
 document.getElementById('navSettings').onclick = () => { openPanel(settingsPanel); body.classList.remove('nav-open'); };
 scrim.onclick = closePanels;
 document.querySelectorAll('[data-close]').forEach(b => b.onclick = closePanels);
 document.addEventListener('keydown', e => { if (e.key==='Escape') { closePanels(); body.classList.remove('nav-open'); } });
+
+/* ================= ADMIN ================= */
+const adminPass = document.getElementById('adminPass');
+const adminErr = document.getElementById('adminErr');
+const adminLock = document.getElementById('adminLock');
+const adminTools = document.getElementById('adminTools');
+function showAdminUnlocked(){ adminLock.style.display='none'; adminTools.style.display='block'; }
+function showAdminLocked(){ adminLock.style.display='block'; adminTools.style.display='none'; adminPass.value=''; adminErr.classList.remove('show'); }
+// open admin from settings
+document.getElementById('adminBtn').onclick = () => {
+  settingsPanel.classList.remove('open');
+  showAdminLocked();
+  openPanel(adminPanel);
+  setTimeout(() => adminPass.focus(), 300);
+};
+document.querySelectorAll('[data-close-admin]').forEach(b => b.onclick = closePanels);
+function tryUnlock(){
+  if (adminPass.value.trim().toLowerCase() === 'lac') { showAdminUnlocked(); }
+  else { adminErr.classList.add('show'); adminPass.select(); }
+}
+document.getElementById('adminUnlock').onclick = tryUnlock;
+adminPass.addEventListener('keydown', e => { if (e.key==='Enter') tryUnlock(); });
+document.getElementById('adminLock2').onclick = showAdminLocked;
+
+// build the current page's full HTML (live, always up to date)
+function currentHTML(){ return '<!DOCTYPE html>\n' + document.documentElement.outerHTML; }
+
+const copyBtn = document.getElementById('copyHtmlBtn');
+const copyLabel = document.getElementById('copyHtmlLabel');
+const htmlBox = document.getElementById('htmlBox');
+copyBtn.onclick = async () => {
+  copyLabel.textContent = 'Getting code…';
+  let html;
+  try {
+    // Fetch the page's own source file, so it's the real, multi-lined HTML,
+    // not the flattened/edited live DOM.
+    const res = await fetch(location.href, { cache: 'no-store' });
+    html = await res.text();
+  } catch (e) {
+    html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML; // fallback
+  }
+  htmlBox.style.display = 'block';
+  htmlBox.value = html;
+  htmlBox.focus(); htmlBox.select();
+  try {
+    await navigator.clipboard.writeText(html);
+    copyLabel.textContent = 'Copied! ✓';
+  } catch (err) {
+    try { document.execCommand('copy'); copyLabel.textContent = 'Copied! ✓'; }
+    catch(e){ copyLabel.textContent = 'Select box & copy'; }
+  }
+  setTimeout(() => { copyLabel.textContent = 'Copy HTML'; }, 2200);
+};
+
+document.getElementById('clearPrefsBtn').onclick = () => {
+  ['mode','accent','glass','motion'].forEach(k => localStorage.removeItem('lac_'+k));
+  location.reload();
+};
+
+/* ---- Maintenance mode (saves in this browser) ---- */
+const maintSwitch = document.getElementById('maintSwitch');
+let maintOn = localStorage.getItem('lac_maint') === '1';
+function paintMaint(){ maintSwitch.classList.toggle('on', maintOn); }
+maintSwitch.onclick = () => { maintOn = !maintOn; paintMaint(); };
+paintMaint();
+document.getElementById('maintSave').onclick = () => {
+  localStorage.setItem('lac_maint', maintOn ? '1' : '0');
+  body.classList.toggle('maint', maintOn);
+  const s = document.getElementById('maintSave');
+  const old = s.innerHTML; s.textContent = 'Saved ✓';
+  setTimeout(() => { s.innerHTML = old; }, 1600);
+};
+
+/* ---- Escape hatch: turn maintenance off from the maintenance screen itself ---- */
+const maintAdminBtn = document.getElementById('maintAdminBtn');
+const maintAdminBox = document.getElementById('maintAdminBox');
+const maintPass = document.getElementById('maintPass');
+const maintErr = document.getElementById('maintErr');
+maintAdminBtn.onclick = () => { maintAdminBox.classList.add('show'); maintPass.focus(); };
+function maintTryOff(){
+  if (maintPass.value.trim().toLowerCase() === 'lac') {
+    maintOn = false;
+    localStorage.setItem('lac_maint', '0');
+    body.classList.remove('maint');
+    if (typeof paintMaint === 'function') paintMaint();
+    maintAdminBox.classList.remove('show'); maintPass.value=''; maintErr.classList.remove('show');
+  } else { maintErr.classList.add('show'); maintPass.select(); }
+}
+document.getElementById('maintUnlock').onclick = maintTryOff;
+maintPass.addEventListener('keydown', e => { if (e.key==='Enter') maintTryOff(); });
 
 /* ================= MOBILE NAV ================= */
 const menuBtn = document.getElementById('menuBtn');
@@ -915,6 +1144,86 @@ const apps = [
     tips:["Start from a template, it's way faster than a blank page.","Stick to 2–3 fonts to keep your design looking clean.","Your work saves automatically as you go.","Use 'Share' to hand a link to your teacher or group."],
     logo:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M15.5 9.5a3.5 3.5 0 1 0 0 5"/></svg>'
   },
+  {
+    name:"Canvas",
+    desc:"Your courses, assignments and announcements on SASC Learn.",
+    long:"Canvas (SASC Learn) is where all your subjects live. Open a course to see its announcements, assignments, discussions and files, submit your work, and check feedback from your teachers. It's the same site this dashboard links to.",
+    dev:"Instructure", category:"Learning", rating:"4.3",
+    url:"https://learn.sasc.nsw.edu.au",
+    color:"#e2703a",
+    tips:["Check the To-Do list on your Canvas home for what's due.","Open a course, then Assignments to submit your work.","Turn on notifications so you never miss an announcement.","Use the Calendar to see every subject's due dates together."],
+    logo:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="1.6"/><circle cx="12" cy="20" r="1.6"/><circle cx="4" cy="12" r="1.6"/><circle cx="20" cy="12" r="1.6"/><circle cx="12" cy="12" r="4"/></svg>'
+  },
+  {
+    name:"Edumate",
+    desc:"Timetable, attendance, reports and school records.",
+    long:"Edumate is the school portal for your timetable, attendance, academic reports and other records. Log in to see where you need to be, check your marks over time, and keep track of school information.",
+    dev:"Edumate", category:"School Portal", rating:"4.1",
+    url:"https://edumate.lac.nsw.edu.au",
+    color:"#2f8f5b",
+    tips:["Check your timetable here at the start of each day.","Your reports and marks history live in Edumate.","Log in with your school account.","Keep an eye on attendance so nothing's missed."],
+    logo:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-5 9 5-9 5-9-5z"/><path d="M7 11v5c0 1 2.5 2.5 5 2.5s5-1.5 5-2.5v-5"/></svg>'
+  },
+  {
+    name:"Google",
+    desc:"Search the web and access Google tools.",
+    long:"Google is your gateway to web search and Google's tools. Use it to research topics for assignments, look things up quickly, and reach Google services. Remember to check more than one source when researching.",
+    dev:"Google", category:"Search", rating:"4.8",
+    url:"https://www.google.com",
+    color:"#4285f4",
+    tips:["Put quotes around a phrase to search it exactly.","Add the year to get the most recent results.","Always check more than one source for schoolwork.","Use the tabs (Images, News) to narrow your search."],
+    logo:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.3-4.3"/></svg>'
+  },
+  {
+    name:"Office 365",
+    desc:"Word, Excel, PowerPoint and more in your browser.",
+    long:"Office 365 (web) gives you Word, Excel, PowerPoint, OneNote and more, right in your browser with your school account. Create and edit documents anywhere, and they save to the cloud automatically.",
+    dev:"Microsoft", category:"Productivity", rating:"4.6",
+    url:"https://portal.office.com",
+    color:"#d83b01",
+    tips:["Your files save automatically to the cloud.","Sign in with your school email to see all your apps.","Use the web apps on any computer, nothing to install.","Share a doc with a link instead of emailing a copy."],
+    logo:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 8l6 8M15 8l-6 8"/></svg>'
+  },
+  {
+    name:"Office 365 Install",
+    desc:"Download and install the full Office apps on your device.",
+    long:"This is the install page for the full Office 365 desktop apps (Word, Excel, PowerPoint and more). Sign in with your school account to download and install them on your own computer, included with your school licence.",
+    dev:"Microsoft", category:"Install", rating:"4.4",
+    url:"https://portal.office.com/account/?ref=Harmony",
+    color:"#0f6cbd",
+    tips:["Sign in with your school account to get your free copy.","Install on your home computer as well as school.","Restart after installing so everything loads properly.","You can install on more than one device."],
+    logo:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 21h16"/></svg>'
+  },
+  {
+    name:"OneDrive Install",
+    desc:"Install OneDrive to sync your school files.",
+    long:"OneDrive is your school cloud storage. Install it to sync your files across devices, back your work up automatically, and get to your documents from anywhere. Sign in with your school account.",
+    dev:"Microsoft", category:"Cloud Storage", rating:"4.4",
+    url:"https://go.microsoft.com/fwlink/p/?LinkID=2182910&clcid=0xc09&culture=en-au&country=au",
+    color:"#0a66c2",
+    tips:["Save your schoolwork here so it's backed up.","Files sync across every device you sign in on.","You can get to your files from any web browser too.","Right-click a file to share it with a link."],
+    logo:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 17h11a3.5 3.5 0 0 0 .5-6.96A5 5 0 0 0 8 8.5 4 4 0 0 0 6 17z"/></svg>'
+  },
+  {
+    name:"ClickView",
+    desc:"Educational videos for your subjects.",
+    long:"ClickView is a library of educational videos matched to what you're learning. Watch clips your teachers set, revise topics visually, and search for videos across your subjects. A great way to review before a test.",
+    dev:"ClickView", category:"Video", rating:"4.5",
+    url:"https://online.clickview.com.au",
+    color:"#e5203a",
+    tips:["Watch a topic video before class to get a head start.","Use it to revise visually before a test.","Search for a subject to find related clips.","Sign in with your school account."],
+    logo:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M10 9l5 3-5 3z"/></svg>'
+  },
+  {
+    name:"LAC Website",
+    desc:"The main Leppington Anglican College website.",
+    long:"The official Leppington Anglican College website, news, events, term dates, notices and general school information. Check it for the latest updates from the school.",
+    dev:"Leppington Anglican College", category:"School", rating:"4.2",
+    url:"http://www.lac.nsw.edu.au",
+    color:"#3a4256",
+    tips:["Check here for term dates and school news.","Event details and notices are posted here.","Bookmark it for quick access to school info.","Great for parents and students alike."],
+    logo:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>'
+  },
 ];
 const appsEl = document.getElementById('apps');
 function renderApps(filter=""){
@@ -998,9 +1307,11 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape' && appsView.c
 /* ================= LOADING SCREEN ================= */
 const loader = document.getElementById('loader');
 function hideLoader(){ if (loader) loader.classList.add('hide'); }
+// respect reduce-motion: hide almost immediately; otherwise give the animation a beat
 const loaderDelay = document.body.classList.contains('reduce-motion') ? 150 : 1500;
 if (document.readyState === 'complete') setTimeout(hideLoader, loaderDelay);
 else window.addEventListener('load', () => setTimeout(hideLoader, loaderDelay));
+// safety net so it never gets stuck
 setTimeout(hideLoader, 4000);
 </script>
 </body>
