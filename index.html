@@ -631,6 +631,181 @@
   .cur-opt .prev { width: 26px; height: 26px; display: grid; place-items: center; }
   .cur-opt .prev svg { width: 22px; height: 22px; }
 
+  /* ---------------- REDEEM CODE ---------------- */
+  .redeem-row { display: flex; gap: 8px; margin-top: 12px; }
+  .redeem-row input {
+    flex: 1; border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px;
+    font-family: inherit; font-size: 14px; background: transparent; color: var(--ink);
+  }
+  .redeem-row input:focus { outline: none; border-color: var(--accent); }
+  .redeem-row button { border: none; background: var(--accent); color: #fff; border-radius: 12px; padding: 0 18px; cursor: pointer; font-weight: 700; font-family: inherit; }
+  .redeem-msg { font-size: 13px; margin-top: 10px; font-weight: 600; display: none; }
+  .redeem-msg.show { display: block; }
+  .redeem-msg.ok { color: #1f9d6b; }
+  .redeem-msg.bad { color: #e5484d; }
+
+  /* ---------------- ARCADE GAME WINDOW ---------------- */
+  .game-scrim {
+    position: fixed; inset: 0; z-index: 120; display: flex; align-items: center; justify-content: center; padding: 20px;
+    background: rgba(10,14,25,.55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    opacity: 0; pointer-events: none; transition: opacity .3s ease;
+  }
+  .game-scrim.open { opacity: 1; pointer-events: auto; }
+  .game-win {
+    width: min(420px, 100%); border-radius: 20px; overflow: hidden; background: var(--card);
+    box-shadow: 0 40px 90px -30px rgba(0,0,0,.6); border: 1px solid var(--line);
+    transform: scale(.85) translateY(10px); opacity: 0;
+    transition: transform .38s cubic-bezier(.2,.9,.3,1.15), opacity .3s ease;
+  }
+  .game-scrim.open .game-win { transform: none; opacity: 1; }
+  body.reduce-motion .game-win { transition: opacity .2s ease; transform: none; }
+  .game-titlebar {
+    display: flex; align-items: center; gap: 10px; padding: 12px 16px; color: #fff;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+  }
+  .game-titlebar .gt { font-weight: 800; font-size: 15px; flex: 1; display: flex; align-items: center; gap: 8px; }
+  .game-titlebar .g-x {
+    border: none; background: rgba(255,255,255,.22); color: #fff; width: 30px; height: 30px; border-radius: 50%;
+    cursor: pointer; font-size: 20px; line-height: 1; display: grid; place-items: center; transition: transform .15s ease, background .2s ease;
+  }
+  .game-titlebar .g-x:hover { transform: rotate(90deg); background: rgba(255,255,255,.35); }
+  .game-body { padding: 16px; }
+  .game-scorebar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 700; font-size: 14px; }
+  .game-scorebar .best { color: var(--muted); font-size: 13px; }
+  #snakeCanvas { width: 100%; border-radius: 14px; background: color-mix(in srgb, var(--ink) 6%, transparent); display: block; touch-action: none; }
+  .game-foot { display: flex; gap: 10px; margin-top: 14px; }
+  .game-btn { flex: 1; border: none; border-radius: 12px; padding: 12px; font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer; transition: transform .15s ease; }
+  .game-btn:hover { transform: translateY(-1px); }
+  .game-btn.primary { background: var(--accent); color: #fff; }
+  .game-btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+  .game-hint { text-align: center; font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+  /* ---------------- FAKE CRASH ("error" code) ---------------- */
+  @keyframes crashShake {
+    0%,100% { transform: translate(0,0) rotate(0deg); }
+    20% { transform: translate(-7px,5px) rotate(-1deg); }
+    40% { transform: translate(8px,-6px) rotate(1.3deg); }
+    60% { transform: translate(-6px,7px) rotate(-1.5deg); }
+    80% { transform: translate(7px,-5px) rotate(1deg); }
+  }
+  @keyframes crashRainbow {
+    from { filter: hue-rotate(0deg) saturate(1.8) contrast(1.1); }
+    to { filter: hue-rotate(360deg) saturate(1.8) contrast(1.1); }
+  }
+  body.crash-shake { animation: crashShake .26s linear infinite, crashRainbow 1.1s linear infinite; }
+  body.crashing { overflow: hidden !important; }
+  /* let the native cursor show during the crash and hide the custom one */
+  body.crashing * { cursor: auto !important; }
+  body.crashing .cursor-dot, body.crashing .cursor-ring { display: none !important; }
+
+  .crash-fall { animation: crashFall 1.3s cubic-bezier(.55,0,1,.45) forwards; will-change: transform, opacity; }
+  @keyframes crashFall {
+    0% { transform: translateY(0) rotate(0deg); }
+    100% { transform: translateY(150vh) rotate(var(--spin, 90deg)); opacity: .2; }
+  }
+
+  /* blue screen */
+  #crashBSOD {
+    position: fixed; inset: 0; z-index: 5000; display: none;
+    background: #0a4bce; color: #fff; padding: 9vh 9vw;
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+  #crashBSOD.show { display: block; animation: bsodIn .18s ease both; }
+  @keyframes bsodIn { from { opacity: 0; } to { opacity: 1; } }
+  .bsod-face { font-size: clamp(56px,12vw,118px); font-weight: 300; margin-bottom: 22px; line-height: 1; }
+  .bsod-msg { font-size: clamp(17px,2.4vw,26px); line-height: 1.5; max-width: 780px; font-weight: 300; }
+  .bsod-progress { font-size: 16px; margin-top: 22px; font-weight: 600; }
+  .bsod-sub { font-size: 14px; margin-top: 30px; opacity: .92; line-height: 1.7; }
+  .bsod-sub code { font-family: ui-monospace, Menlo, monospace; }
+  .bsod-restart {
+    margin-top: 38px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.45);
+    color: #fff; font-family: inherit; font-weight: 700; font-size: 15px; padding: 12px 26px; border-radius: 8px; cursor: pointer;
+    transition: background .2s ease;
+  }
+  .bsod-restart:hover { background: rgba(255,255,255,.28); }
+
+  /* error dialog windows */
+  .err-win {
+    position: fixed; z-index: 5100; width: 300px; background: #f0f0f0; color: #111;
+    border-radius: 7px; box-shadow: 0 14px 34px rgba(0,0,0,.55); overflow: hidden;
+    font-family: "Segoe UI", Tahoma, sans-serif;
+    animation: errRise .24s ease, errShake .32s linear infinite .24s;
+  }
+  .err-win.dragging { animation: none !important; }
+  @keyframes errRise { from { transform: translateY(140px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes errShake { 0%,100%{ transform: translate(0,0);} 25%{transform:translate(-3px,2px);} 50%{transform:translate(3px,-2px);} 75%{transform:translate(-2px,-3px);} }
+  .err-title { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; color: #fff; font-size: 13px; font-weight: 700; background: linear-gradient(180deg, #d24b4b, #b02a2a); cursor: move; user-select: none; }
+  .err-x { background: rgba(255,255,255,.25); border: 1px solid rgba(255,255,255,.6); color: #fff; width: 19px; height: 18px; font-size: 11px; line-height: 1; cursor: pointer; border-radius: 3px; }
+  .err-x:hover { background: rgba(255,255,255,.42); }
+  .err-body { display: flex; gap: 13px; padding: 16px; align-items: center; }
+  .err-icon { width: 38px; height: 38px; flex: none; border-radius: 50%; background: #e02b2b; color: #fff; display: grid; place-items: center; font-size: 24px; font-weight: 800; }
+  .err-text { font-size: 13px; line-height: 1.4; }
+  .err-foot { padding: 0 16px 15px; display: flex; justify-content: center; }
+  .err-ok { background: #e6e6e6; border: 1px solid #8a8a8a; border-radius: 4px; padding: 5px 24px; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .err-ok:active { transform: translateY(1px); }
+
+  .bsod-hint { margin-top: 34px; font-size: 14px; opacity: .82; }
+
+  /* fake windows taskbar (only shows during the crash) */
+  #crashTaskbar {
+    position: fixed; left: 0; right: 0; bottom: 0; height: 46px; z-index: 99999;
+    display: none; align-items: center; gap: 10px; padding: 0 10px;
+    background: linear-gradient(180deg, #3a7bec 0%, #245edb 8%, #1c48b0 100%);
+    box-shadow: 0 -2px 12px rgba(0,0,0,.45); font-family: "Segoe UI", Tahoma, sans-serif;
+  }
+  #crashTaskbar.show { display: flex; animation: tbUp .32s cubic-bezier(.2,.9,.3,1.1) both; }
+  @keyframes tbUp { from { transform: translateY(100%); } to { transform: none; } }
+  .tb-start {
+    display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 18px 0 12px; border: none; cursor: pointer;
+    background: linear-gradient(180deg, #6fc94f, #3f8f2c); color: #fff; font-weight: 800; font-style: italic; font-size: 16px;
+    border-radius: 0 14px 14px 0; box-shadow: inset 0 1px 0 rgba(255,255,255,.45), inset 0 -2px 4px rgba(0,0,0,.2);
+  }
+  .tb-items { flex: 1; display: flex; gap: 6px; overflow: hidden; }
+  .tb-item {
+    display: flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; max-width: 170px;
+    background: linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,.08)); border: 1px solid rgba(255,255,255,.28);
+    border-radius: 4px; color: #fff; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .tb-item.tb-err { animation: tbBlink 1s steps(1) infinite; font-weight: 700; }
+  @keyframes tbBlink { 0%,50%{ background: rgba(224,43,43,.75);} 51%,100%{ background: rgba(255,255,255,.14);} }
+  .tb-clock { color: #fff; font-size: 12px; font-weight: 600; padding: 0 14px; text-align: center; line-height: 1.25; border-left: 1px solid rgba(255,255,255,.25); }
+
+  .tb-item.tb-info { cursor: pointer; font-weight: 700; font-family: inherit; }
+  .tb-item.tb-info:hover { background: linear-gradient(180deg, rgba(255,255,255,.4), rgba(255,255,255,.16)); }
+  .info-win { width: 340px; animation: errRise .24s ease !important; }
+  .info-title { background: linear-gradient(180deg, #3f6fd4, #274fae) !important; }
+  .info-icon { background: #2f5fd6 !important; font-family: Georgia, "Times New Roman", serif; font-style: italic; }
+  #crashBSOD.failed { animation: bsodRed .08s steps(1) infinite; }
+  @keyframes bsodRed { 0%,50%{ background: #ff1224; } 51%,100%{ background: #2a0004; } }
+
+  /* photosensitive warning — blurs the background and stays on top of everything */
+  #epwarn {
+    position: fixed; inset: 0; z-index: 200000; display: none; align-items: center; justify-content: center; padding: 24px;
+    background: rgba(10,14,25,.5);
+    backdrop-filter: blur(16px) saturate(1.1); -webkit-backdrop-filter: blur(16px) saturate(1.1);
+  }
+  #epwarn.show { display: flex; animation: epIn .25s ease both; }
+  @keyframes epIn { from { opacity: 0; } to { opacity: 1; } }
+  .epwarn-card {
+    max-width: 460px; width: 100%; background: #14192b; color: #fff; border-radius: 20px; padding: 34px 30px;
+    border: 1px solid rgba(255,255,255,.14); box-shadow: 0 40px 90px -30px rgba(0,0,0,.7); text-align: center;
+  }
+  .epwarn-icon { width: 66px; height: 66px; margin: 0 auto 18px; border-radius: 50%; display: grid; place-items: center; background: #f5b301; color: #1a1200; font-size: 36px; font-weight: 900; }
+  .epwarn-card h2 { font-size: 22px; font-weight: 800; margin-bottom: 14px; }
+  .epwarn-card p { font-size: 14.5px; line-height: 1.55; color: #c7cde0; margin-bottom: 12px; }
+  .epwarn-btns { display: flex; gap: 12px; margin-top: 22px; }
+  .epwarn-btns button { flex: 1; border: none; border-radius: 12px; padding: 14px; font-family: inherit; font-weight: 800; font-size: 15px; cursor: pointer; transition: transform .15s ease; }
+  .epwarn-btns button:hover { transform: translateY(-1px); }
+  .epwarn-continue { background: #e5484d; color: #fff; }
+  .epwarn-exit { background: rgba(255,255,255,.14); color: #fff; border: 1px solid rgba(255,255,255,.32); }
+  /* the custom cursor hides the normal pointer and sits behind this overlay, so force it back here */
+  #epwarn, #epwarn * { cursor: auto !important; }
+  #epwarn .epwarn-btns button { cursor: pointer !important; }
+
+  /* draggable window handles */
+  .game-titlebar { cursor: move; user-select: none; }
+  .game-win.dragging { transition: none !important; }
+
   @media print { #loader, #succession, #appsView, .detail-scrim, .sidebar, .fab-wrap, .panel, .scrim, .top-actions, .menu-btn, #toTop, .cursor-dot, .cursor-ring { display: none !important; } .main { margin: 0; } }
 </style>
 </head>
@@ -758,6 +933,13 @@
       <button class="cur-opt" data-cursor="off"><span class="prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l16 16M20 4L4 20"/></svg></span>Off</button>
     </div>
 
+    <div class="set-title">Redeem code</div>
+    <div class="redeem-row">
+      <input id="redeemInput" placeholder="Enter a code" autocomplete="off" spellcheck="false">
+      <button id="redeemBtn">Redeem</button>
+    </div>
+    <div class="redeem-msg" id="redeemMsg"></div>
+
     <div class="set-title">Admin</div>
     <button class="admin-btn" id="adminBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Admin Login</button>
 
@@ -846,6 +1028,60 @@
 <!-- STORE-STYLE DETAIL VIEW -->
 <div class="detail-scrim" id="detailScrim">
   <div class="detail-card" id="detailCard"></div>
+</div>
+
+<!-- ARCADE GAME WINDOW -->
+<div class="game-scrim" id="gameScrim">
+  <div class="game-win">
+    <div class="game-titlebar">
+      <div class="gt">🐍 Snake</div>
+      <button class="g-x" id="gameClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="game-body">
+      <div class="game-scorebar">
+        <span>Score: <span id="snakeScore">0</span></span>
+        <span class="best">Best: <span id="snakeBest">0</span></span>
+      </div>
+      <canvas id="snakeCanvas" width="320" height="320"></canvas>
+      <div class="game-foot">
+        <button class="game-btn primary" id="snakeReset">Reset</button>
+        <button class="game-btn ghost" id="snakeCloseBtn">Close</button>
+      </div>
+      <div class="game-hint">Arrow keys or WASD to move · swipe on mobile</div>
+    </div>
+  </div>
+</div>
+
+<!-- FAKE CRASH BLUE SCREEN -->
+<div id="crashBSOD">
+  <div class="bsod-face">:(</div>
+  <div class="bsod-msg">Your dashboard ran into a problem and needs to restart. We're just collecting some error info, and then we'll restart for you.</div>
+  <div class="bsod-progress" id="bsodPct">0% complete</div>
+  <div class="bsod-sub">Stop code: <code>DASHBOARD_KERNEL_PANIC</code><br>What failed: <code>leppington.sys</code></div>
+  <div class="bsod-hint">Refresh the page to restart your dashboard.</div>
+</div>
+
+<!-- FAKE WINDOWS TASKBAR (crash) -->
+<div id="crashTaskbar">
+  <div class="tb-items" id="tbItems">
+    <button class="tb-item tb-info" id="tbInfoBtn">ℹ Information</button>
+    <div class="tb-item tb-err" id="tbErrCount">⚠ 0 errors</div>
+  </div>
+  <div class="tb-clock" id="tbClock"></div>
+</div>
+
+<!-- PHOTOSENSITIVE SEIZURE WARNING (blurs everything, always on top) -->
+<div id="epwarn">
+  <div class="epwarn-card">
+    <div class="epwarn-icon">⚠</div>
+    <h2>Photosensitive Seizure Warning</h2>
+    <p>What comes next contains <b>rapidly flashing red lights and colours</b>. A very small number of people may experience seizures or other symptoms triggered by flashing lights.</p>
+    <p>If you are photosensitive or feel unwell, choose <b>Exit</b>. Continue only if you're comfortable with fast flashing.</p>
+    <div class="epwarn-btns">
+      <button class="epwarn-continue" id="epContinue">Continue</button>
+      <button class="epwarn-exit" id="epExit">Exit</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1389,6 +1625,358 @@ function openDetail(ix, fromEl){
 function closeDetail(){ detailScrim.classList.remove('open'); }
 detailScrim.addEventListener('click', e => { if (e.target === detailScrim) closeDetail(); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && appsView.classList.contains('open')) { if (detailScrim.classList.contains('open')) closeDetail(); else closeApps(); } });
+
+/* ================= REDEEM CODES ================= */
+const redeemInput = document.getElementById('redeemInput');
+const redeemMsg = document.getElementById('redeemMsg');
+function showRedeemMsg(text, ok){ redeemMsg.textContent = text; redeemMsg.className = 'redeem-msg show ' + (ok ? 'ok' : 'bad'); }
+function tryRedeem(){
+  const code = redeemInput.value.trim().toLowerCase();
+  if (!code) return;
+  if (code === 'snake') {
+    showRedeemMsg('🐍 Code accepted! Launching…', true);
+    redeemInput.value = '';
+    closePanels();
+    setTimeout(openGame, 340);
+  } else if (code === 'error') {
+    showRedeemMsg('⚠ Executing…', true);
+    redeemInput.value = '';
+    closePanels();
+    // show the seizure warning FIRST — the crash only starts if they press Continue
+    setTimeout(() => document.getElementById('epwarn').classList.add('show'), 360);
+  } else {
+    showRedeemMsg('That code didn’t work.', false);
+    redeemInput.select();
+  }
+}
+document.getElementById('redeemBtn').onclick = tryRedeem;
+redeemInput.addEventListener('keydown', e => { if (e.key === 'Enter') tryRedeem(); });
+
+/* ================= SNAKE GAME ================= */
+const gameScrim = document.getElementById('gameScrim');
+const gameWin = gameScrim.querySelector('.game-win');
+const gameTitlebar = gameScrim.querySelector('.game-titlebar');
+const snakeCanvas = document.getElementById('snakeCanvas');
+const sctx = snakeCanvas.getContext('2d');
+const snakeScoreEl = document.getElementById('snakeScore');
+const snakeBestEl = document.getElementById('snakeBest');
+const TILES = 16;
+const CELL = snakeCanvas.width / TILES;
+let snake, dir, nextDir, foods, sScore, sRunning, sOver, sWin, sLoop;
+
+function snakeBest(){ return parseInt(localStorage.getItem('lac_snake_best') || '0', 10); }
+function setSnakeBest(v){ localStorage.setItem('lac_snake_best', v); snakeBestEl.textContent = v; }
+
+function roundRect(x, y, w, h, r){
+  sctx.beginPath();
+  sctx.moveTo(x + r, y);
+  sctx.arcTo(x + w, y, x + w, y + h, r);
+  sctx.arcTo(x + w, y + h, x, y + h, r);
+  sctx.arcTo(x, y + h, x, y, r);
+  sctx.arcTo(x, y, x + w, y, r);
+  sctx.closePath();
+}
+// place ONE new apple on a random free cell; returns false if the board is full
+function placeOneFood(){
+  const taken = new Set();
+  snake.forEach(s => taken.add(s.x + ',' + s.y));
+  foods.forEach(f => taken.add(f.x + ',' + f.y));
+  const free = [];
+  for (let y = 0; y < TILES; y++) for (let x = 0; x < TILES; x++) if (!taken.has(x + ',' + y)) free.push({x, y});
+  if (!free.length) return false;
+  foods.push(free[Math.floor(Math.random()*free.length)]);
+  return true;
+}
+function resetSnake(){
+  snake = [{x:8,y:8},{x:7,y:8},{x:6,y:8}];
+  dir = {x:1,y:0}; nextDir = {x:1,y:0};
+  sScore = 0; snakeScoreEl.textContent = 0;
+  sOver = false; sWin = false; sRunning = true;
+  foods = [];
+  placeOneFood();          // start with a single apple
+  drawSnake();
+}
+function stepSnake(){
+  if (!sRunning || sOver || sWin) return;
+  dir = nextDir;
+  const head = { x: snake[0].x + dir.x, y: snake[0].y + dir.y };
+  if (head.x < 0 || head.y < 0 || head.x >= TILES || head.y >= TILES || snake.some(s => s.x === head.x && s.y === head.y)) {
+    sOver = true; sRunning = false;
+    if (sScore > snakeBest()) setSnakeBest(sScore);
+    drawSnake();
+    return;
+  }
+  snake.unshift(head);
+  const fi = foods.findIndex(f => f.x === head.x && f.y === head.y);
+  if (fi >= 0) {
+    sScore++; snakeScoreEl.textContent = sScore;
+    foods.splice(fi, 1);                  // remove the apple we ate (tail stays = snake grows)
+    if (snake.length >= TILES * TILES) {  // filled the whole board = win
+      sWin = true; sRunning = false;
+      if (sScore > snakeBest()) setSnakeBest(sScore);
+      drawSnake(); return;
+    }
+    // each apple eaten raises how many are on the board: 2, then 3, then 4...
+    while (foods.length < sScore + 1) { if (!placeOneFood()) break; }
+  } else {
+    snake.pop();
+  }
+  drawSnake();
+}
+function drawSnake(){
+  const css = getComputedStyle(document.body);
+  const accent = css.getPropertyValue('--accent').trim() || '#2f5fd6';
+  const accent2 = css.getPropertyValue('--accent2').trim() || '#5b8def';
+  sctx.clearRect(0, 0, snakeCanvas.width, snakeCanvas.height);
+  sctx.fillStyle = '#e5484d';
+  foods.forEach(f => { roundRect(f.x*CELL + 3, f.y*CELL + 3, CELL - 6, CELL - 6, 5); sctx.fill(); });
+  snake.forEach((s, i) => {
+    sctx.fillStyle = i === 0 ? accent : accent2;
+    roundRect(s.x*CELL + 1.5, s.y*CELL + 1.5, CELL - 3, CELL - 3, 5); sctx.fill();
+  });
+  if (sOver) {
+    sctx.fillStyle = 'rgba(10,14,25,.62)';
+    sctx.fillRect(0, 0, snakeCanvas.width, snakeCanvas.height);
+    sctx.fillStyle = '#fff'; sctx.textAlign = 'center';
+    sctx.font = '800 26px system-ui, sans-serif';
+    sctx.fillText('Game Over', snakeCanvas.width/2, snakeCanvas.height/2 - 6);
+    sctx.font = '600 14px system-ui, sans-serif';
+    sctx.fillText('Score ' + sScore + ' · tap Reset', snakeCanvas.width/2, snakeCanvas.height/2 + 20);
+  } else if (sWin) {
+    sctx.fillStyle = 'rgba(31,157,107,.80)';
+    sctx.fillRect(0, 0, snakeCanvas.width, snakeCanvas.height);
+    sctx.fillStyle = '#fff'; sctx.textAlign = 'center';
+    sctx.font = '800 26px system-ui, sans-serif';
+    sctx.fillText('You Win! 🎉', snakeCanvas.width/2, snakeCanvas.height/2 - 6);
+    sctx.font = '600 14px system-ui, sans-serif';
+    sctx.fillText('Board filled · Score ' + sScore, snakeCanvas.width/2, snakeCanvas.height/2 + 20);
+  }
+}
+function startSnakeLoop(){ clearInterval(sLoop); sLoop = setInterval(stepSnake, 115); }
+function openGame(){
+  gameScrim.classList.add('open');
+  // recentre in case it was dragged around last time
+  gameWin.style.position = ''; gameWin.style.left = ''; gameWin.style.top = ''; gameWin.style.margin = ''; gameWin.style.zIndex = '';
+  snakeBestEl.textContent = snakeBest();
+  resetSnake(); startSnakeLoop();
+  document.addEventListener('keydown', snakeKey);
+}
+function closeGame(){
+  gameScrim.classList.remove('open');
+  sRunning = false; clearInterval(sLoop);
+  document.removeEventListener('keydown', snakeKey);
+}
+function snakeKey(e){
+  const k = e.key.toLowerCase();
+  if (k === 'escape') { closeGame(); return; }
+  let nd = null;
+  if (k === 'arrowup' || k === 'w') nd = {x:0,y:-1};
+  else if (k === 'arrowdown' || k === 's') nd = {x:0,y:1};
+  else if (k === 'arrowleft' || k === 'a') nd = {x:-1,y:0};
+  else if (k === 'arrowright' || k === 'd') nd = {x:1,y:0};
+  if (nd) {
+    e.preventDefault();
+    if (nd.x === -dir.x && nd.y === -dir.y) return; // no instant reverse
+    nextDir = nd;
+  }
+}
+// touch swipe support
+let snakeTouch = null;
+snakeCanvas.addEventListener('touchstart', e => { snakeTouch = e.touches[0]; }, { passive: true });
+snakeCanvas.addEventListener('touchmove', e => {
+  if (!snakeTouch) return;
+  const t = e.touches[0];
+  const dx = t.clientX - snakeTouch.clientX, dy = t.clientY - snakeTouch.clientY;
+  if (Math.abs(dx) < 18 && Math.abs(dy) < 18) return;
+  const nd = Math.abs(dx) > Math.abs(dy) ? {x: dx>0?1:-1, y:0} : {x:0, y: dy>0?1:-1};
+  if (!(nd.x === -dir.x && nd.y === -dir.y)) nextDir = nd;
+  snakeTouch = t; e.preventDefault();
+}, { passive: false });
+document.getElementById('snakeReset').onclick = () => { resetSnake(); startSnakeLoop(); };
+document.getElementById('gameClose').onclick = closeGame;
+document.getElementById('snakeCloseBtn').onclick = closeGame;
+gameScrim.addEventListener('click', e => { if (e.target === gameScrim) closeGame(); });
+// the game window can be dragged around by its title bar too
+makeDraggable(gameWin, gameTitlebar, false);
+
+/* ================= FAKE CRASH ("error" code) ================= */
+const ERR_MSGS = [
+  "0x000000EF — CRITICAL_PROCESS_DIED",
+  "Exception 0xC0000005 at 0x7FFE1A3B: memory could not be read.",
+  "STOP: 0x0000007B INACCESSIBLE_BOOT_DEVICE",
+  "kernel32.dll has stopped responding.",
+  "Stack overflow in module dashboard.exe",
+  "0x000000D1 — DRIVER_IRQL_NOT_LESS_OR_EQUAL",
+  "Fatal error: heap corruption detected.",
+  "System32 is not responding. A reboot is required.",
+  "0xDEADBEEF — segmentation fault (core dumped)",
+  "Unhandled exception has occurred in your application.",
+  "Registry hive LEPPINGTON\\SYSTEM is corrupt.",
+  "Out of memory. Cannot allocate 4096 MB.",
+  "0x0000009F — DRIVER_POWER_STATE_FAILURE",
+  "winlogon.exe terminated unexpectedly.",
+  "Access violation writing location 0x00000000.",
+];
+const ERR_TITLES = ["System Error","Fatal Exception","dashboard.exe","Critical Error","Windows","Runtime Error","Warning"];
+let crashing = false, errCount = 0, dragTopZ = 5100, crashClock = null, spawnIv = null, bsodFailed = false;
+const ERR_CAP = 1000;
+
+function triggerCrash(){
+  if (crashing) return; crashing = true;
+  document.body.classList.add('crash-shake', 'crashing');
+
+  // 1s in: everything peels off and falls
+  setTimeout(() => {
+    const targets = document.querySelectorAll('.sidebar, .topbar, .layout, .fab-wrap, #toTop, .menu-btn, main > footer, .course, .rail-card, .brand');
+    targets.forEach((el, i) => {
+      el.style.setProperty('--spin', (Math.random()*220 - 110).toFixed(0) + 'deg');
+      setTimeout(() => el.classList.add('crash-fall'), i * 55);
+    });
+  }, 1000);
+
+  // ~2.4s in: blue screen, taskbar rises, then an avalanche of popups from the bottom
+  setTimeout(() => {
+    document.body.classList.remove('crash-shake');
+    document.getElementById('crashBSOD').classList.add('show');
+    document.getElementById('crashTaskbar').classList.add('show');
+    startCrashClock(); updateErrCount();
+    animateBsodProgress();
+    for (let i = 0; i < 26; i++) setTimeout(makeErrWin, 150 * i + Math.random()*120);
+    // keep them coming until the cap
+    spawnIv = setInterval(() => { if (errCount >= ERR_CAP) { clearInterval(spawnIv); return; } makeErrWin(); }, 500);
+  }, 2400);
+}
+
+function updateErrCount(){
+  const el = document.getElementById('tbErrCount');
+  if (el) el.textContent = '⚠ ' + errCount + ' error' + (errCount === 1 ? '' : 's');
+}
+
+function makeErrWin(){
+  if (errCount >= ERR_CAP) return;
+  errCount++; updateErrCount();
+  const w = document.createElement('div');
+  w.className = 'err-win';
+  const msg = ERR_MSGS[Math.floor(Math.random()*ERR_MSGS.length)];
+  const title = ERR_TITLES[Math.floor(Math.random()*ERR_TITLES.length)];
+  w.innerHTML =
+    '<div class="err-title"><span>⚠ ' + title + '</span><button class="err-x" aria-label="Close">✕</button></div>' +
+    '<div class="err-body"><div class="err-icon">✕</div><div class="err-text">' + msg + '</div></div>' +
+    '<div class="err-foot"><button class="err-ok">OK</button></div>';
+  // cluster them near the bottom, just above the taskbar, so they pile up for fun
+  const winW = 300, winH = 172, tb = 46;
+  const maxX = Math.max(6, innerWidth - winW);
+  const topMin = Math.max(6, innerHeight * 0.40);
+  const topMax = Math.max(topMin + 1, innerHeight - tb - winH);
+  w.style.left = (Math.random()*maxX) + 'px';
+  w.style.top  = (topMin + Math.random()*(topMax - topMin)) + 'px';
+  w.style.zIndex = ++dragTopZ;
+  document.body.appendChild(w);
+  const kill = () => { if (w.parentNode) { w.remove(); errCount--; updateErrCount(); } };
+  w.querySelector('.err-x').onclick = kill;
+  // classic gag: closing one spawns two more (until the cap)
+  w.querySelector('.err-ok').onclick = () => { kill(); makeErrWin(); makeErrWin(); };
+  makeDraggable(w, w.querySelector('.err-title'));
+}
+
+function startCrashClock(){
+  const el = document.getElementById('tbClock');
+  const tick = () => {
+    const d = new Date();
+    let h = d.getHours(); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+    const m = String(d.getMinutes()).padStart(2, '0');
+    el.innerHTML = h + ':' + m + ' ' + ap + '<br>' + d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear();
+  };
+  tick(); crashClock = setInterval(tick, 1000);
+}
+
+let bsodProgIv = null;
+function animateBsodProgress(){
+  const el = document.getElementById('bsodPct');
+  let p = 0;
+  clearInterval(bsodProgIv);
+  bsodProgIv = setInterval(() => {
+    p += Math.floor(Math.random()*9) + 1;
+    if (p >= 100) {
+      el.textContent = '100% complete';
+      if (!bsodFailed) goRedFlicker();   // first time it "completes", it fails → red flicker
+      else onBsodComplete();             // afterwards, just keep bursting more errors
+      p = 0;
+      return;
+    }
+    el.textContent = p + '% complete';
+  }, 360);
+}
+
+// blue → red, flicker fast, flood errors
+function goRedFlicker(){
+  bsodFailed = true;
+  const bsod = document.getElementById('crashBSOD');
+  bsod.classList.add('failed');
+  document.querySelector('.bsod-face').textContent = ':(((';
+  document.querySelector('.bsod-msg').innerHTML =
+    "Recovery failed. Your dashboard could not be repaired and will keep trying. Errors are multiplying out of control.";
+  if (spawnIv) clearInterval(spawnIv);
+  spawnIv = setInterval(() => {
+    if (errCount >= ERR_CAP) { clearInterval(spawnIv); return; }
+    makeErrWin(); makeErrWin(); makeErrWin(); makeErrWin();
+  }, 70);
+}
+
+// each failed attempt (after the first) vomits a fresh burst of popups
+function onBsodComplete(){
+  for (let i = 0; i < 24; i++) setTimeout(makeErrWin, i * 15);
+}
+
+// The seizure warning shows BEFORE the crash. Continue = start crashing, Exit = back out.
+document.getElementById('epContinue').onclick = () => {
+  document.getElementById('epwarn').classList.remove('show'); // the blur goes away
+  triggerCrash();
+};
+document.getElementById('epExit').onclick = () => {
+  document.getElementById('epwarn').classList.remove('show'); // nothing crashes
+};
+
+// Information button on the taskbar → help popup explaining how to fix it
+let infoWin = null;
+function openInfoWin(){
+  if (infoWin && infoWin.parentNode) { infoWin.style.zIndex = ++dragTopZ; return; }
+  const w = document.createElement('div');
+  w.className = 'err-win info-win';
+  w.innerHTML =
+    '<div class="err-title info-title"><span>ℹ Information</span><button class="err-x" aria-label="Close">✕</button></div>' +
+    '<div class="err-body"><div class="err-icon info-icon">i</div><div class="err-text">Your dashboard has crashed and can\'t recover on its own.<br><br>To fix the problem, <b>refresh this page</b>:<br>• Windows: press <b>F5</b> or <b>Ctrl + R</b><br>• Mac: press <b>Cmd + R</b><br><br>Or click your browser\'s reload button.</div></div>' +
+    '<div class="err-foot"><button class="err-ok">OK</button></div>';
+  w.style.left = Math.max(6, (innerWidth - 340) / 2) + 'px';
+  w.style.top  = Math.max(6, innerHeight * 0.20) + 'px';
+  w.style.zIndex = ++dragTopZ;
+  document.body.appendChild(w);
+  infoWin = w;
+  const kill = () => { if (w.parentNode) w.remove(); infoWin = null; };
+  w.querySelector('.err-x').onclick = kill;
+  w.querySelector('.err-ok').onclick = kill;
+  makeDraggable(w, w.querySelector('.err-title'));
+}
+document.getElementById('tbInfoBtn').onclick = openInfoWin;
+
+/* ---- draggable windows (error popups + the Snake window) ---- */
+let dragState = null;
+function beginDrag(win, cx, cy, bumpZ){
+  const r = win.getBoundingClientRect();
+  win.style.position = 'fixed'; win.style.margin = '0';
+  win.style.left = r.left + 'px'; win.style.top = r.top + 'px';
+  if (bumpZ) win.style.zIndex = ++dragTopZ;
+  win.classList.add('dragging');
+  dragState = { win, offX: cx - r.left, offY: cy - r.top };
+}
+function makeDraggable(win, handle, bumpZ = true){
+  handle.addEventListener('mousedown', e => { if (e.target.closest('button')) return; e.preventDefault(); beginDrag(win, e.clientX, e.clientY, bumpZ); });
+  handle.addEventListener('touchstart', e => { if (e.target.closest('button')) return; const t = e.touches[0]; beginDrag(win, t.clientX, t.clientY, bumpZ); }, { passive: true });
+}
+window.addEventListener('mousemove', e => { if (!dragState) return; dragState.win.style.left = (e.clientX - dragState.offX) + 'px'; dragState.win.style.top = (e.clientY - dragState.offY) + 'px'; });
+window.addEventListener('mouseup', () => { if (dragState) { dragState.win.classList.remove('dragging'); dragState = null; } });
+window.addEventListener('touchmove', e => { if (!dragState) return; const t = e.touches[0]; dragState.win.style.left = (t.clientX - dragState.offX) + 'px'; dragState.win.style.top = (t.clientY - dragState.offY) + 'px'; e.preventDefault(); }, { passive: false });
+window.addEventListener('touchend', () => { if (dragState) { dragState.win.classList.remove('dragging'); dragState = null; } });
 
 /* ================= SCROLL TO TOP ================= */
 const toTop = document.getElementById('toTop');
