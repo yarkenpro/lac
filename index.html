@@ -616,6 +616,13 @@
     body[data-cursor="glow"] .cursor-dot.hot i { transform: scale(1.4); }
     body[data-cursor="glow"] .cursor-dot.click i { transform: scale(2); }
     body[data-cursor="glow"] .cursor-ring.click i { transform: scale(1.3); }
+
+    /* ---- CUSTOM PHOTO cursor (uploaded image) ---- */
+    body[data-cursor="custom"] .cursor-dot { display: block; width: 40px; height: 40px; margin: -2px 0 0 -2px; }
+    body[data-cursor="custom"] .cursor-dot i { background: var(--cursor-img) center / contain no-repeat; filter: drop-shadow(0 2px 4px rgba(0,0,0,.35)); transition: transform .15s ease; }
+    body[data-cursor="custom"] .cursor-dot.hot i { transform: scale(1.15); }
+    body[data-cursor="custom"] .cursor-dot.click i { transform: scale(.85); }
+    body[data-cursor="custom"] .cursor-ring { display: none; }
   }
   body.reduce-motion .cursor-ring i, body.reduce-motion .cursor-dot i { transition: none; }
 
@@ -864,12 +871,21 @@
   .snake-bang:hover { background: var(--accent); color: #fff; }
 
   /* ---------------- TOAST NOTIFICATIONS ---------------- */
-  #toastWrap { position: fixed; right: 24px; bottom: 92px; z-index: 300; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; pointer-events: none; }
-  .toast { pointer-events: auto; display: flex; align-items: center; gap: 12px; background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; box-shadow: var(--shadow); max-width: 330px; transform: translateX(120%); opacity: 0; transition: transform .42s cubic-bezier(.2,.9,.3,1.1), opacity .3s ease; }
+  #toastWrap { position: fixed; right: 24px; bottom: 24px; z-index: 999999; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; pointer-events: none; max-height: 92vh; }
+  .toast { pointer-events: auto; width: 320px; max-width: 78vw; background: var(--card); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; transform: translateX(120%); opacity: 0; transition: transform .42s cubic-bezier(.2,.9,.3,1.1), opacity .3s ease; }
   .toast.in { transform: none; opacity: 1; }
-  .toast .t-ico { width: 38px; height: 38px; flex: none; border-radius: 10px; display: grid; place-items: center; font-size: 20px; box-shadow: 0 6px 14px -6px rgba(0,0,0,.35); }
-  .toast .t-txt b { font-size: 13.5px; font-weight: 800; display: block; }
-  .toast .t-txt span { font-size: 12px; color: var(--muted); }
+  .toast.out { transform: translateX(120%); opacity: 0; }
+  .t-bar { height: 3px; background: color-mix(in srgb, var(--ink) 10%, transparent); }
+  .t-bar i { display: block; height: 100%; width: 100%; transform-origin: left; transform: scaleX(0); background: linear-gradient(90deg, var(--accent), var(--accent2)); animation-name: tbarFill; animation-timing-function: linear; animation-fill-mode: forwards; }
+  .toast.urgent .t-bar i { background: linear-gradient(90deg, #e5484d, #f59e0b); }
+  @keyframes tbarFill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  .t-row { display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 14px; }
+  .t-ico { width: 38px; height: 38px; flex: none; border-radius: 10px; display: grid; place-items: center; font-size: 20px; box-shadow: 0 6px 14px -6px rgba(0,0,0,.35); }
+  .t-txt { flex: 1; min-width: 0; }
+  .t-txt b { font-size: 13.5px; font-weight: 800; display: block; }
+  .t-txt span { font-size: 12px; color: var(--muted); display: block; word-break: break-word; }
+  .t-x { border: none; background: none; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; flex: none; padding: 0 2px; }
+  .t-x:hover { color: var(--ink); }
 
   /* ---------------- DESTROY THE CITY GAME ---------------- */
   #cityView { position: fixed; inset: 0; z-index: 140; display: none; flex-direction: column; background: #10121c; }
@@ -891,6 +907,93 @@
   .city-close { border: none; background: rgba(255,255,255,.22); color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 22px; display: grid; place-items: center; transition: all .15s ease; flex: none; }
   .city-close:hover { transform: rotate(90deg); background: rgba(255,255,255,.35); }
   #cityCanvas { flex: 1; width: 100%; display: block; touch-action: none; }
+
+  /* ---------------- BOMB ("bomb" code) ---------------- */
+  #bombView { position: fixed; inset: 0; z-index: 4500; display: none; place-items: center; pointer-events: none; }
+  #bombView.show { display: grid; }
+  .bomb-emoji { font-size: clamp(80px, 20vw, 220px); transform: scale(0); filter: drop-shadow(0 10px 30px rgba(0,0,0,.5)); }
+  #bombView.fuse .bomb-emoji { animation: bombIn .35s cubic-bezier(.2,1.3,.4,1) forwards, bombShake .11s linear .35s infinite; }
+  @keyframes bombIn { from { transform: scale(0) translateY(-45vh); } to { transform: scale(1) translateY(0); } }
+  @keyframes bombShake { 0%,100% { transform: translate(-3px,0) rotate(-5deg); } 50% { transform: translate(3px,-2px) rotate(5deg); } }
+  #bombView.boom .bomb-emoji { display: none; }
+  .bomb-flash { position: absolute; inset: 0; background: radial-gradient(circle at center, #fff, #ffd24a 28%, #ff6a2b 52%, transparent 70%); transform: scale(0); opacity: 0; }
+  #bombView.boom .bomb-flash { animation: bombFlash .85s ease-out forwards; }
+  @keyframes bombFlash { 0% { transform: scale(0); opacity: 1; } 60% { opacity: 1; } 100% { transform: scale(3.2); opacity: 0; } }
+  body.bomb-shake { animation: crashShake .12s linear infinite; }
+
+  /* ---------------- LAC CELEBRATION ("lac" / "rainbow lac") ---------------- */
+  #lacView { position: fixed; inset: 0; z-index: 4600; display: none; place-items: center; pointer-events: none; }
+  #lacView.show { display: grid; }
+  #lacConfetti { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .lac-logo { position: relative; width: clamp(110px,22vw,200px); height: clamp(110px,22vw,200px); border-radius: 28px; display: grid; place-items: center; color: #fff; font-weight: 900; font-size: clamp(40px,8vw,72px); letter-spacing: .02em; background: linear-gradient(135deg, var(--accent), var(--accent2)); box-shadow: 0 30px 70px -20px rgba(0,0,0,.6); transform: translateY(-120vh); }
+  #lacView.show .lac-logo.drop { animation: lacDrop 1.15s cubic-bezier(.2,1.1,.3,1) forwards; }
+  @keyframes lacDrop { 0%{ transform: translateY(-120vh) rotate(-8deg);} 70%{ transform: translateY(0) rotate(0);} 82%{ transform: translateY(-26px);} 100%{ transform: translateY(0);} }
+
+  /* ---------------- DASHBOARD EDITOR ---------------- */
+  #customLayer { position: fixed; inset: 0; z-index: 45; pointer-events: none; }
+  #customLayer .ed-el { position: absolute; }
+  #customLayer .ed-el.ed-card { border-radius: 14px; padding: 14px; box-shadow: var(--shadow); }
+  #customLayer .ed-el.ed-button { border-radius: 12px; padding: 10px 18px; font-weight: 800; text-align: center; }
+  #customLayer .ed-el.ed-image img { width: 100%; height: 100%; display: block; border-radius: 10px; object-fit: cover; }
+  #editorView { position: fixed; inset: 0; z-index: 150; display: none; }
+  #editorView.open { display: block; }
+  #editorView, #editorView * { cursor: auto !important; }
+  #editorView button, #editorView .ed-tool, #editorView .ed-close { cursor: pointer !important; }
+  #editorView .ed-el { cursor: move !important; }
+  #editorView .ed-el[contenteditable="true"] { cursor: text !important; }
+  #editorView .ed-resize { cursor: nwse-resize !important; }
+  body.editor-open .cursor-dot, body.editor-open .cursor-ring { display: none !important; }
+  #editorBoard { position: absolute; inset: 0; background: var(--bg); overflow: hidden; }
+  .ed-toolbar { position: absolute; top: 0; left: 0; right: 0; z-index: 5; display: flex; align-items: center; gap: 14px; padding: 10px 14px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; flex-wrap: wrap; }
+  .ed-title { font-weight: 800; font-size: 15px; }
+  .ed-tools { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; align-items: center; }
+  .ed-tool { border: 1px solid rgba(255,255,255,.4); background: rgba(255,255,255,.14); color: #fff; font-family: inherit; font-weight: 700; font-size: 13px; padding: 8px 12px; border-radius: 10px; }
+  .ed-tool:hover { background: rgba(255,255,255,.28); }
+  .ed-tool.ed-primary { background: #fff; color: var(--accent); }
+  .ed-tool.ed-warn:hover { background: #e5484d; border-color: #e5484d; }
+  .ed-close { border: none; background: rgba(255,255,255,.22); color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 22px; }
+  .ed-el { position: absolute; min-width: 20px; }
+  .ed-el.ed-text { font-weight: 700; padding: 4px; outline: none; }
+  .ed-el.ed-card { border-radius: 14px; padding: 14px; box-shadow: var(--shadow); outline: none; overflow: hidden; }
+  .ed-el.ed-button { border-radius: 12px; padding: 10px 18px; font-weight: 800; text-align: center; outline: none; }
+  .ed-el.ed-image img { width: 100%; height: 100%; display: block; border-radius: 10px; object-fit: cover; pointer-events: none; }
+  #editorView .ed-el.sel { outline: 2px solid #fff; outline-offset: 2px; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 50%, transparent); }
+  .ed-resize { position: absolute; right: -7px; bottom: -7px; width: 15px; height: 15px; background: var(--accent); border: 2px solid #fff; border-radius: 50%; }
+  .ed-props, .ed-bg { position: absolute; top: 66px; right: 14px; z-index: 6; width: 230px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); padding: 14px; display: none; }
+  .ed-props.show, .ed-bg.show { display: block; }
+  .ed-prop-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+  .ed-prop-row label { font-size: 12.5px; font-weight: 700; color: var(--muted); }
+  .ed-prop-row input[type=color] { width: 44px; height: 30px; border: none; background: none; padding: 0; }
+  .ed-prop-row input[type=range] { flex: 1; }
+  .ed-prop-row input[type=text] { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; font-family: inherit; font-size: 12px; background: transparent; color: var(--ink); }
+  .ed-del { width: 100%; border: none; background: #e5484d; color: #fff; font-family: inherit; font-weight: 700; padding: 9px; border-radius: 10px; cursor: pointer; margin-top: 4px; }
+  .ed-bg-title { font-weight: 800; font-size: 13px; margin-bottom: 10px; }
+  .ed-bg-swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .ed-bg-sw { width: 40px; height: 40px; border-radius: 10px; cursor: pointer; border: 2px solid transparent; }
+  .ed-bg-sw:hover { border-color: var(--accent); }
+  .ed-el.ed-courses { border-radius: 14px; padding: 14px; box-shadow: var(--shadow); overflow: hidden; font-size: 14px; }
+  #customLayer .ed-el.ed-courses { border-radius: 14px; padding: 14px; box-shadow: var(--shadow); }
+  .ed-courses-list { display: flex; flex-direction: column; gap: 4px; margin-top: 2px; }
+  .ed-course-link { font-size: 12.5px; font-weight: 600; text-decoration: none; color: inherit; opacity: .92; }
+  #customLayer .ed-course-link { pointer-events: auto; }
+  #customLayer .ed-course-link:hover { opacity: 1; text-decoration: underline; }
+  body.custom-dash .layout { display: none; }
+  body.editor-open #customLayer { display: none; }
+  .ed-el.ed-heading { font-weight: 900; padding: 4px; outline: none; }
+  .ed-el.ed-note { border-radius: 10px; padding: 14px; box-shadow: var(--shadow); outline: none; overflow: hidden; }
+  .ed-el.ed-sticker { padding: 2px; outline: none; line-height: 1; }
+  .ed-el.ed-divider { height: 5px; border-radius: 3px; }
+  .ed-el.ed-clock { border-radius: 12px; padding: 10px 14px; box-shadow: var(--shadow); font-weight: 800; text-align: center; }
+  #customLayer .ed-el.ed-note { border-radius: 10px; padding: 14px; box-shadow: var(--shadow); }
+  #customLayer .ed-el.ed-clock { border-radius: 12px; padding: 10px 14px; box-shadow: var(--shadow); font-weight: 800; text-align: center; }
+  #customLayer .ed-el.ed-divider { height: 5px; border-radius: 3px; }
+  .ed-layer { display: flex; gap: 6px; margin-bottom: 10px; }
+  .ed-layer button { flex: 1; border: 1px solid var(--line); background: transparent; color: var(--ink); font-family: inherit; font-weight: 700; font-size: 14px; padding: 7px 0; border-radius: 8px; cursor: pointer; }
+  .ed-layer button:hover { border-color: var(--accent); color: var(--accent); }
+  /* editor popups must sit ABOVE the fullscreen editor (z 150) */
+  #edWarnScrim, #edStartScrim { z-index: 250; }
+  body.editor-open #edWarnScrim, body.editor-open #edWarnScrim * { cursor: auto !important; }
+  body.editor-open #edWarnScrim button { cursor: pointer !important; }
 
   @media print { #loader, #succession, #appsView, .detail-scrim, .sidebar, .fab-wrap, .panel, .scrim, .top-actions, .menu-btn, #toTop, .cursor-dot, .cursor-ring { display: none !important; } .main { margin: 0; } }
 </style>
@@ -1023,7 +1126,13 @@
       <button class="cur-opt" data-cursor="ring"><span class="prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/></svg></span>Ring</button>
       <button class="cur-opt" data-cursor="glow"><span class="prev"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".4"/></svg></span>Glow</button>
       <button class="cur-opt" data-cursor="off"><span class="prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l16 16M20 4L4 20"/></svg></span>Off</button>
+      <button class="cur-opt" data-cursor="custom"><span class="prev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg></span>Photo</button>
     </div>
+    <button class="admin-btn" id="cursorUploadBtn" style="margin-top:10px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 8l5-5 5 5"/><path d="M4 21h16"/></svg>Upload cursor photo</button>
+    <input type="file" id="cursorImgInput" accept="image/*" hidden>
+
+    <div class="set-title">Customise</div>
+    <button class="admin-btn" id="editorBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>Launch Dashboard Editor</button>
 
     <div class="set-title">Redeem code</div>
     <div class="redeem-row">
@@ -1035,6 +1144,12 @@
 
     <div class="set-title">Admin</div>
     <button class="admin-btn" id="adminBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Admin Login</button>
+
+    <div class="set-title">Debug</div>
+    <div class="set-row">
+      <div><div class="lbl">Debug notifications</div><div class="sub">Show a notification for everything that happens</div></div>
+      <div class="switch" id="debugSwitch"></div>
+    </div>
 
     <div class="set-title">About</div>
     <p style="font-size:13px;color:var(--muted);line-height:1.5">A reimagined dashboard for Leppington Anglican College. Your preferences save automatically in this browser. All course links open the live SASC Learn site where you're signed in.</p>
@@ -1240,6 +1355,94 @@
   </div>
 </div>
 
+<!-- BOMB EXPLOSION -->
+<div id="bombView">
+  <div class="bomb-emoji">💣</div>
+  <div class="bomb-flash"></div>
+</div>
+
+<!-- LAC CELEBRATION (logo drop + confetti) -->
+<div id="lacView">
+  <canvas id="lacConfetti"></canvas>
+  <div class="lac-logo" id="lacLogo">LAC</div>
+</div>
+
+<!-- USER'S SAVED DASHBOARD ELEMENTS -->
+<div id="customLayer"></div>
+
+<!-- DASHBOARD EDITOR -->
+<div id="editorView">
+  <div id="editorBoard"></div>
+  <div class="ed-toolbar">
+    <div class="ed-title">🎨 Dashboard Editor</div>
+    <div class="ed-tools">
+      <button class="ed-tool" data-add="text">＋ Text</button>
+      <button class="ed-tool" data-add="card">＋ Card</button>
+      <button class="ed-tool" data-add="button">＋ Button</button>
+      <button class="ed-tool" data-add="heading">＋ Heading</button>
+      <button class="ed-tool" data-add="note">＋ Note</button>
+      <button class="ed-tool" data-add="sticker">＋ Sticker</button>
+      <button class="ed-tool" data-add="divider">＋ Line</button>
+      <button class="ed-tool" data-add="clock">＋ Clock</button>
+      <button class="ed-tool" id="edAddImage">＋ Image</button>
+      <button class="ed-tool" id="edBgBtn">🖼 Background</button>
+      <button class="ed-tool ed-warn" id="edReset">↺ Reset</button>
+      <button class="ed-tool ed-primary" id="edSave">Save</button>
+      <button class="ed-close" id="edClose" aria-label="Close">&times;</button>
+    </div>
+  </div>
+  <input type="file" id="edImageInput" accept="image/*" hidden>
+  <input type="file" id="edBgInput" accept="image/*" hidden>
+  <div class="ed-props" id="edProps">
+    <div class="ed-prop-row" id="edColorRow"><label>Text colour</label><input type="color" id="edColor"></div>
+    <div class="ed-prop-row" id="edFillRow"><label>Fill</label><input type="color" id="edFill"></div>
+    <div class="ed-prop-row" id="edSizeRow"><label>Size</label><input type="range" id="edSize" min="12" max="80" step="1"></div>
+    <div class="ed-prop-row" id="edLinkRow"><label>Link</label><input type="text" id="edLink" placeholder="https://"></div>
+    <div class="ed-layer">
+      <button data-layer="front" title="Send to front">⤒</button>
+      <button data-layer="fwd" title="Forward">↑</button>
+      <button data-layer="back1" title="Backward">↓</button>
+      <button data-layer="back" title="Send to back">⤓</button>
+    </div>
+    <button class="ed-del" id="edDelete">Delete element</button>
+  </div>
+  <div class="ed-bg" id="edBgPanel">
+    <div class="ed-bg-title">Background</div>
+    <div class="ed-bg-swatches" id="edBgSwatches"></div>
+    <div class="ed-prop-row"><label>Solid</label><input type="color" id="edBgColor"></div>
+    <button class="ed-tool ed-primary" id="edBgImage" style="width:100%;color:var(--accent)">Upload image…</button>
+  </div>
+</div>
+
+<!-- EDITOR CLOSE WARNING -->
+<div class="win-scrim" id="edWarnScrim">
+  <div class="win-card" style="max-width:380px">
+    <div class="win-bar"><div class="wt">💾 Save your dashboard?</div><button class="wx" id="edWarnClose" aria-label="Close">&times;</button></div>
+    <div class="win-body">
+      <p style="font-size:14px;line-height:1.55;color:var(--ink)">You've made changes in the editor. Save them to your dashboard, or discard?</p>
+      <div style="display:flex;gap:10px;margin-top:18px">
+        <button class="ext-btn" id="edWarnSave" style="flex:1">Save</button>
+        <button class="ext-btn ghost" id="edWarnDiscard" style="flex:1">Discard</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- EDITOR START CHOICE -->
+<div class="win-scrim" id="edStartScrim">
+  <div class="win-card" style="max-width:420px">
+    <div class="win-bar"><div class="wt">🎨 Dashboard Editor</div><button class="wx" id="edStartClose" aria-label="Close">&times;</button></div>
+    <div class="win-body">
+      <p style="font-size:14px;line-height:1.55;color:var(--ink)">How do you want to start?</p>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+        <button class="ext-btn" id="edStartDefault" style="width:100%">Use the default dashboard &amp; edit it</button>
+        <button class="ext-btn ghost" id="edStartNew" style="width:100%">Make a new dashboard</button>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:14px;line-height:1.5">A new dashboard starts blank but keeps your Courses. Tip: <b>Reset</b> clears everything.</p>
+    </div>
+  </div>
+</div>
+
 <script>
 /* ================= DATA ================= */
 
@@ -1422,6 +1625,21 @@ const motionSwitch = document.getElementById('motionSwitch');
 function applyMotion(reduce){ body.classList.toggle('reduce-motion', reduce); motionSwitch.classList.toggle('on', reduce); save('motion', reduce?'1':'0'); }
 motionSwitch.onclick = () => applyMotion(!body.classList.contains('reduce-motion'));
 applyMotion(store('motion') === '1');
+
+// debug notifications — when on, narrate everything that happens
+const debugSwitch = document.getElementById('debugSwitch');
+let debugOn = store('debug') === '1';
+function debugLog(title, sub){ if (debugOn) showToast('🐞', '#7263a6', title, sub || ''); }
+function applyDebug(on){ debugOn = on; debugSwitch.classList.toggle('on', on); save('debug', on ? '1' : '0'); }
+debugSwitch.onclick = () => { applyDebug(!debugOn); debugLog('Debug mode', debugOn ? 'Turned on' : 'Turned off'); };
+applyDebug(debugOn);
+document.addEventListener('click', e => {
+  if (!debugOn || (e.target.closest && e.target.closest('#toastWrap'))) return;
+  const sel = 'button,a,.switch,.nav-item,.sw,.cur-opt,.app,.course,[data-tool],.fab,.icon-btn,.ext-card,.city-tool,.ext-share,.ext-remove';
+  const el = (e.target.closest && e.target.closest(sel)) || e.target;
+  const name = el.id ? '#' + el.id : ((el.getAttribute && el.getAttribute('title')) || (el.textContent || '').trim().slice(0, 28) || el.className || el.tagName || '');
+  debugLog('Clicked', ((el.tagName || '').toLowerCase()) + (name ? ' · ' + name : ''));
+}, true);
 // reduce-motion CSS
 const rmStyle = document.createElement('style');
 rmStyle.textContent = '.reduce-motion *{animation:none!important;transition:none!important;}';
@@ -1494,7 +1712,7 @@ copyBtn.onclick = async () => {
 };
 
 document.getElementById('clearPrefsBtn').onclick = () => {
-  ['mode','accent','glass','motion','cursor','rainbowmouse','rainbow','found','city_best'].forEach(k => localStorage.removeItem('lac_'+k));
+  ['mode','accent','glass','motion','cursor','cursorimg','rainbowmouse','rainbow','found','city_best','debug','dashboard'].forEach(k => localStorage.removeItem('lac_'+k));
   location.reload();
 };
 
@@ -1789,6 +2007,8 @@ function showRedeemMsg(text, ok){ redeemMsg.textContent = text; redeemMsg.classN
 function tryRedeem(){
   const code = redeemInput.value.trim().toLowerCase();
   if (!code) return;
+  const KNOWN = ['snake','error','bomb','rainbow','rainbow mouse','lac','leppington anglican college','leppington','rainbow lac','rainbow leppington anglican college','roblox destroy a city','roblox destory a city','destroy a city','destory a city'];
+  if (KNOWN.includes(code)){ showToast('✅', '#1f9d6b', 'Code redeemed', '"' + code + '" accepted'); debugLog('Executing code', code); }
   if (code === 'snake') {
     addFound('snake');
     showRedeemMsg('🐍 Code accepted! Launching… (saved to Extensions)', true);
@@ -1820,13 +2040,32 @@ function tryRedeem(){
     applyRainbowAll(on);
     showRedeemMsg(on ? '🌈 Everything is rainbow! (saved to Extensions)' : 'Rainbow off.', true);
     redeemInput.value = '';
+  } else if (code === 'bomb') {
+    addFound('bomb');
+    showRedeemMsg('💣 Placing a bomb… (saved to Extensions)', true);
+    redeemInput.value = '';
+    closePanels();
+    setTimeout(runBomb, 300);
   } else if (['roblox destroy a city','roblox destory a city','destroy a city','destory a city'].includes(code)) {
     addFound('city');
     showRedeemMsg('🏙️ Loading Destroy the City… (saved to Extensions)', true);
     redeemInput.value = '';
     closePanels();
     setTimeout(openCity, 340);
+  } else if (['rainbow lac','rainbow leppington anglican college'].includes(code)) {
+    addFound('rainbowlac');
+    showRedeemMsg('🌈 Go LAC! (saved to Extensions)', true);
+    redeemInput.value = ''; closePanels();
+    setTimeout(() => runLac(true), 320);
+  } else if (['lac','leppington anglican college','leppington'].includes(code)) {
+    addFound('lac');
+    showRedeemMsg('🎓 Go LAC! (saved to Extensions)', true);
+    redeemInput.value = ''; closePanels();
+    setTimeout(() => runLac(false), 320);
   } else {
+    showRedeemMsg('That code did not work.', false);
+    showToast('⛔', '#e5484d', 'Invalid code', '"' + code + '" is not a code', { urgent: true });
+    redeemInput.select();
   }
 }
 document.getElementById('redeemBtn').onclick = tryRedeem;
@@ -1935,6 +2174,7 @@ function drawSnake(){
 function startSnakeLoop(){ clearInterval(sLoop); sLoop = setInterval(stepSnake, 115); }
 function openGame(){
   gameScrim.classList.add('open');
+  debugLog('Launching', 'Snake');
   // recentre in case it was dragged around last time
   gameWin.style.position = ''; gameWin.style.left = ''; gameWin.style.top = ''; gameWin.style.margin = ''; gameWin.style.zIndex = '';
   snakeBestEl.textContent = snakeBest();
@@ -2195,7 +2435,21 @@ function applyCursor(c){
   cursorPicker.querySelectorAll('.cur-opt').forEach(b => b.classList.toggle('active', b.dataset.cursor === c));
   save('cursor', c);
 }
-cursorPicker.querySelectorAll('.cur-opt').forEach(b => b.onclick = () => applyCursor(b.dataset.cursor));
+cursorPicker.querySelectorAll('.cur-opt').forEach(b => b.onclick = () => {
+  if (b.dataset.cursor === 'custom' && !store('cursorimg')) { cursorImgInput.click(); return; }  // no photo yet → upload
+  applyCursor(b.dataset.cursor);
+});
+// custom uploaded photo cursor
+const cursorImgInput = document.getElementById('cursorImgInput');
+function setCursorImg(dataUrl){ document.body.style.setProperty('--cursor-img', 'url("' + dataUrl + '")'); }
+if (store('cursorimg')) setCursorImg(store('cursorimg'));
+document.getElementById('cursorUploadBtn').onclick = () => cursorImgInput.click();
+cursorImgInput.onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => { setCursorImg(r.result); save('cursorimg', r.result); applyCursor('custom'); showToast('🖱️', '#2f5fd6', 'Custom cursor set', 'Your photo is now the cursor'); };
+  r.readAsDataURL(f); e.target.value = '';
+};
 applyCursor(store('cursor') || 'arrow');
 
 /* rainbow unlocks (redeem codes "rainbow mouse" / "rainbow") */
@@ -2208,6 +2462,51 @@ applyRainbowAll(store('rainbow') === '1');
 function getFound(){ return new Set((store('found') || '').split(',').filter(Boolean)); }
 function addFound(id){ const s = getFound(); if (!s.has(id)) { s.add(id); save('found', [...s].join(',')); const e = EXTENSIONS.find(x => x.id === id); if (e) showToast(e.icon, e.color, e.name + ' collected', 'Saved to Extensions from redeem codes'); } }
 function runErrorCode(){ document.getElementById('epwarn').classList.add('show'); }
+function runBomb(){
+  const bv = document.getElementById('bombView');
+  bv.classList.add('show', 'fuse');
+  document.body.classList.add('bomb-shake');
+  debugLog('Executing', 'Bomb');
+  setTimeout(() => { bv.classList.remove('fuse'); bv.classList.add('boom'); document.body.classList.remove('bomb-shake'); }, 1200);
+  setTimeout(() => { bv.classList.remove('show', 'boom'); runErrorCode(); }, 2100);  // then the crash/error screen
+}
+
+/* ---- LAC celebration: crest drops + confetti ---- */
+let lacTimer = null;
+const confCanvas = document.getElementById('lacConfetti');
+const confCtx = confCanvas.getContext('2d');
+let confParts = [], confRAF = null;
+function startConfetti(rainbow){
+  confCanvas.width = innerWidth; confCanvas.height = innerHeight;
+  confParts = [];
+  const cols = ['#2f5fd6','#c9a24b','#ffffff','#5b8def','#e2703a'];
+  for (let i = 0; i < 170; i++) confParts.push({
+    x: Math.random() * confCanvas.width, y: -20 - Math.random() * confCanvas.height * 0.6,
+    vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 3, rot: Math.random() * 6, vr: (Math.random() - 0.5) * 0.3,
+    w: 6 + Math.random() * 7, h: 8 + Math.random() * 8,
+    color: rainbow ? 'hsl(' + Math.floor(Math.random() * 360) + ',90%,60%)' : cols[Math.floor(Math.random() * cols.length)]
+  });
+  if (!confRAF) confLoop();
+}
+function confLoop(){
+  confCtx.clearRect(0, 0, confCanvas.width, confCanvas.height);
+  confParts.forEach(p => {
+    p.vy += 0.06; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+    confCtx.save(); confCtx.translate(p.x, p.y); confCtx.rotate(p.rot); confCtx.fillStyle = p.color; confCtx.fillRect(-p.w/2, -p.h/2, p.w, p.h); confCtx.restore();
+  });
+  confRAF = requestAnimationFrame(confLoop);
+}
+function stopConfetti(){ if (confRAF){ cancelAnimationFrame(confRAF); confRAF = null; } if (confCtx) confCtx.clearRect(0, 0, confCanvas.width, confCanvas.height); confParts = []; }
+function runLac(rainbow){
+  debugLog('Executing', rainbow ? 'Rainbow LAC' : 'LAC celebration');
+  const lv = document.getElementById('lacView'), logo = document.getElementById('lacLogo');
+  lv.classList.add('show');
+  logo.classList.remove('drop'); void logo.offsetWidth; logo.classList.add('drop');   // restart the drop
+  startConfetti(rainbow);
+  if (rainbow) applyRainbowAll(true);
+  clearTimeout(lacTimer);
+  lacTimer = setTimeout(() => { lv.classList.remove('show'); stopConfetti(); }, 4200);
+}
 function toggleRainbowMouse(){
   const turningOn = !document.body.classList.contains('rainbow-cursor');
   if (turningOn && document.body.dataset.cursor === 'off') applyCursor('arrow');
@@ -2225,6 +2524,12 @@ const EXTENSIONS = [
     desc:'Your cursor cycles through every colour of the rainbow.' },
   { id:'city', name:'Destroy the City', code:'roblox destroy a city', type:'action', action:'Launch', rating:'4.7', color:'#e2703a', icon:'🏙️',
     desc:'Smash a whole city to rubble with a hammer, bombs, a laser gun and a wrecking ball. Every brick you break earns cash.' },
+  { id:'bomb', name:'Bomb the Dashboard', code:'bomb', type:'action', action:'Run', rating:'4.9', color:'#e5484d', icon:'💣',
+    desc:'Drop a bomb on your dashboard, blow it up in a huge flash, then watch the whole thing crash.' },
+  { id:'lac', name:'Leppington Anglican College', code:'lac', type:'action', action:'Run', rating:'5.0', color:'#2f5fd6', icon:'🎓',
+    desc:'Drop the LAC crest and rain confetti everywhere — a burst of school spirit.' },
+  { id:'rainbowlac', name:'Rainbow LAC', code:'rainbow lac', type:'action', action:'Run', rating:'5.0', color:'#8b3fd4', icon:'🌈',
+    desc:'The LAC crest drops with rainbow confetti and turns the whole dashboard rainbow.' },
 ];
 const extScrim = document.getElementById('extScrim');
 const extList = document.getElementById('extList');
@@ -2263,7 +2568,7 @@ function renderExtensions(filter=''){
 
     if (e.type === 'action'){
       const b = document.createElement('button'); b.className = 'ext-btn'; b.textContent = e.action;
-      b.onclick = () => { closeExt(); if (e.id === 'snake') openGame(); else if (e.id === 'city') openCity(); else runErrorCode(); };
+      b.onclick = () => { closeExt(); if (e.id === 'snake') openGame(); else if (e.id === 'city') openCity(); else if (e.id === 'bomb') runBomb(); else if (e.id === 'lac') runLac(false); else if (e.id === 'rainbowlac') runLac(true); else runErrorCode(); };
       row.appendChild(b);
     } else {
       const on = e.id === 'rainbow' ? document.body.classList.contains('rainbow-all') : document.body.classList.contains('rainbow-cursor');
@@ -2310,6 +2615,9 @@ document.getElementById('rbPropsClose').onclick = closeRbProps;
 rbPropsScrim.addEventListener('click', e => { if (e.target === rbPropsScrim) closeRbProps(); });
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
+  const startS = document.getElementById('edStartScrim');
+  if (startS && startS.classList.contains('open')){ startS.classList.remove('open'); return; }
+  if (editorView.classList.contains('open')){ if (edDirty) document.getElementById('edWarnScrim').classList.add('open'); else closeEditor(); return; }
   if (cityView.classList.contains('open')) closeCity();
   else if (shareScrim.classList.contains('open')) closeShare();
   else if (snakeResetScrim.classList.contains('open')) snakeResetScrim.classList.remove('open');
@@ -2324,14 +2632,25 @@ makeDraggable(rbPropsScrim.querySelector('.win-card'), rbPropsScrim.querySelecto
 
 /* toast notifications (bottom-right) */
 const toastWrap = document.getElementById('toastWrap');
-function showToast(icon, color, title, sub){
-  const t = document.createElement('div'); t.className = 'toast';
+function showToast(icon, color, title, sub, opts){
+  opts = opts || {};
+  const dur = opts.urgent ? 10000 : (opts.duration || 5000);
+  const t = document.createElement('div'); t.className = 'toast' + (opts.urgent ? ' urgent' : '');
   t.innerHTML =
-    '<div class="t-ico" style="background:linear-gradient(135deg,'+color+',color-mix(in srgb,'+color+' 60%,white));color:#fff">'+icon+'</div>' +
-    '<div class="t-txt"><b>'+title+'</b><span>'+sub+'</span></div>';
+    '<div class="t-bar"><i style="animation-duration:' + dur + 'ms"></i></div>' +
+    '<div class="t-row">' +
+      '<div class="t-ico" style="background:linear-gradient(135deg,' + color + ',color-mix(in srgb,' + color + ' 60%,white));color:#fff">' + icon + '</div>' +
+      '<div class="t-txt"><b>' + title + '</b><span>' + sub + '</span></div>' +
+      '<button class="t-x" aria-label="Close">&times;</button>' +
+    '</div>';
   toastWrap.appendChild(t);
   requestAnimationFrame(() => t.classList.add('in'));
-  setTimeout(() => { t.classList.remove('in'); setTimeout(() => t.remove(), 460); }, 4200);
+  let done = false;
+  const close = () => { if (done) return; done = true; t.classList.remove('in'); t.classList.add('out'); setTimeout(() => t.remove(), 360); };
+  t.querySelector('.t-x').onclick = close;                       // manual close
+  t.querySelector('.t-bar i').addEventListener('animationend', close); // bar fills up → auto close
+  setTimeout(close, dur + 200);                                  // fallback (also covers reduce-motion)
+  return t;
 }
 
 /* remove an extension you no longer want */
@@ -2388,7 +2707,7 @@ const cctx = cityCanvas.getContext('2d');
 const cityMoneyEl = document.getElementById('cityMoney');
 const cityBestEl = document.getElementById('cityBest');
 const BRICK = 24;
-let cityBricks = [], cityEffects = [], cityMoney = 0, cityTool = 'hammer', cityRAF = null, cityDown = false;
+let cityBricks = [], cityEffects = [], cityDebris = [], cityMoney = 0, cityTool = 'hammer', cityRAF = null, cityDown = false, cityGroundY = 0;
 
 function cityBest(){ return parseInt(localStorage.getItem('lac_city_best') || '0', 10); }
 function setCityBest(v){ localStorage.setItem('lac_city_best', v); cityBestEl.textContent = '$' + v; }
@@ -2399,17 +2718,19 @@ function sizeCityCanvas(){ const r = cityCanvas.getBoundingClientRect(); cityCan
 function buildCity(){
   cityBricks = [];
   const W = cityCanvas.width, H = cityCanvas.height;
-  const groundY = H - BRICK * 1.5;
+  cityGroundY = H - BRICK * 1.5;
+  const groundY = cityGroundY;
   const palette = ['#6b7a99','#7d8aa8','#8a6d5b','#9a5b5b','#5b8a7d','#c9a24b','#7263a6'];
   let x = BRICK;
   while (x < W - BRICK * 3){
     const bw = 3 + Math.floor(Math.random() * 4);          // bricks wide
-    const bh = 4 + Math.floor(Math.random() * Math.min(12, Math.floor((groundY) / BRICK) - 2)); // bricks tall
+    const bh = 4 + Math.floor(Math.random() * Math.min(12, Math.floor(groundY / BRICK) - 2)); // bricks tall
     const col = palette[Math.floor(Math.random() * palette.length)];
     const topY = groundY - bh * BRICK;
     for (let r = 0; r < bh; r++)
       for (let c = 0; c < bw; c++)
-        cityBricks.push({ x: x + c * BRICK, y: topY + r * BRICK, alive: true, color: col, win: Math.random() < 0.25 });
+        cityBricks.push({ x: x + c * BRICK, y: topY + r * BRICK, alive: true, color: col, win: Math.random() < 0.25,
+          gcol: Math.round((x + c * BRICK) / BRICK), grow: bh - r });  // grow 1 = sits on the ground
     x += bw * BRICK + BRICK;                                 // gap between buildings
   }
 }
@@ -2425,6 +2746,14 @@ function drawCity(){
     cctx.fillStyle = b.color; cctx.fillRect(b.x, b.y, BRICK - 2, BRICK - 2);
     if (b.win){ cctx.fillStyle = 'rgba(255,240,180,.55)'; cctx.fillRect(b.x + 4, b.y + 4, BRICK - 10, BRICK - 10); }
   });
+  cityDebris.forEach(d => {
+    cctx.save();
+    cctx.translate(d.x + BRICK/2, d.y + BRICK/2); cctx.rotate(d.rot); cctx.globalAlpha = Math.max(0, d.fade);
+    cctx.fillStyle = d.color; cctx.fillRect(-(BRICK-2)/2, -(BRICK-2)/2, BRICK-2, BRICK-2);
+    if (d.win){ cctx.fillStyle = 'rgba(255,240,180,.55)'; cctx.fillRect(-(BRICK-10)/2, -(BRICK-10)/2, BRICK-10, BRICK-10); }
+    cctx.restore();
+  });
+  cctx.globalAlpha = 1;
   cityEffects.forEach(fx => {
     const t = fx.life / fx.max;
     if (fx.type === 'boom'){ cctx.beginPath(); cctx.arc(fx.x, fx.y, fx.r * (1 - t) + fx.r * 0.15, 0, 7); cctx.strokeStyle = 'rgba(255,170,50,' + t + ')'; cctx.lineWidth = 5; cctx.stroke(); }
@@ -2435,28 +2764,77 @@ function drawCity(){
 
 function cityLoop(){
   for (let i = cityEffects.length - 1; i >= 0; i--) if (--cityEffects[i].life <= 0) cityEffects.splice(i, 1);
+  stepDebris();
   drawCity();
   cityRAF = requestAnimationFrame(cityLoop);
 }
 
+/* turn a brick into a falling piece of debris */
+function dislodge(b, vx, vy){
+  if (cityDebris.length > 500) cityDebris.splice(0, cityDebris.length - 500);
+  cityDebris.push({ x: b.x, y: b.y, vx, vy, rot: 0, vr: (Math.random() - 0.5) * 0.35, color: b.color, win: b.win, landed: false, fade: 1 });
+}
+/* gravity + bounce + settle for every debris piece */
+function stepDebris(){
+  const gy = cityGroundY;
+  for (let i = cityDebris.length - 1; i >= 0; i--){
+    const d = cityDebris[i];
+    if (d.landed){ continue; }                    // resting rubble stays put until the next round
+    d.vy += 0.55; d.x += d.vx; d.y += d.vy; d.rot += d.vr;
+    if (d.y + (BRICK - 2) >= gy){
+      d.y = gy - (BRICK - 2);
+      if (d.vy > 1.4){ d.vy *= -0.34; d.vx *= 0.6; d.vr *= 0.5; }   // bounce
+      else { d.vy = 0; d.vx = 0; d.landed = true; }                 // settle and stay
+    }
+    if (!d.landed && (d.x < -80 || d.x > cityCanvas.width + 80 || d.y > cityCanvas.height + 120)) cityDebris.splice(i, 1);
+  }
+}
+/* anything no longer connected to the ground collapses and falls */
+function collapseUnsupported(){
+  const alive = new Map();
+  cityBricks.forEach(b => { if (b.alive) alive.set(b.gcol + ',' + b.grow, b); });
+  const supported = new Set(); const stack = [];
+  alive.forEach((b, k) => { if (b.grow === 1){ supported.add(k); stack.push(b); } });   // grounded bricks
+  while (stack.length){
+    const b = stack.pop();
+    [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dx,dy]) => {
+      const nk = (b.gcol + dx) + ',' + (b.grow + dy);
+      if (alive.has(nk) && !supported.has(nk)){ supported.add(nk); stack.push(alive.get(nk)); }
+    });
+  }
+  let earned = 0;
+  cityBricks.forEach(b => {
+    if (b.alive && !supported.has(b.gcol + ',' + b.grow)){
+      b.alive = false; earned += b.win ? 3 : 1;
+      dislodge(b, (Math.random() - 0.5) * 1.6, 0.4 + Math.random());   // let it drop
+    }
+  });
+  return earned;
+}
+
 function cityHitAt(px, py){
   let earned = 0;
-  const kill = b => { if (b.alive) { b.alive = false; earned += b.win ? 3 : 1; } };
+  const blast = (b, cx, cy, power) => {                // pushed outward from a blast centre
+    b.alive = false; earned += b.win ? 3 : 1;
+    const dx = (b.x + BRICK/2) - cx, dy = (b.y + BRICK/2) - cy, d = Math.hypot(dx, dy) || 1;
+    dislodge(b, (dx/d) * power + (Math.random() - 0.5), (dy/d) * power - Math.random() * 2);
+  };
   if (cityTool === 'hammer'){
-    cityBricks.forEach(b => { if (Math.hypot(b.x + BRICK/2 - px, b.y + BRICK/2 - py) < 18) kill(b); });
+    cityBricks.forEach(b => { if (b.alive && Math.hypot(b.x+BRICK/2-px, b.y+BRICK/2-py) < 18){ b.alive=false; earned += b.win?3:1; dislodge(b, (Math.random()-0.5)*2, -1 - Math.random()); } });
     cityEffects.push({ type:'hit', x:px, y:py, life:12, max:12 });
   } else if (cityTool === 'bomb'){
     const R = 85;
-    cityBricks.forEach(b => { if (Math.hypot(b.x + BRICK/2 - px, b.y + BRICK/2 - py) < R) kill(b); });
+    cityBricks.forEach(b => { if (b.alive && Math.hypot(b.x+BRICK/2-px, b.y+BRICK/2-py) < R) blast(b, px, py, 4.5); });
     cityEffects.push({ type:'boom', x:px, y:py, r:R, life:24, max:24 });
   } else if (cityTool === 'laser'){
-    cityBricks.forEach(b => { if (Math.abs(b.y + BRICK/2 - py) < 16) kill(b); });
+    cityBricks.forEach(b => { if (b.alive && Math.abs(b.y+BRICK/2-py) < 16){ b.alive=false; earned += b.win?3:1; dislodge(b, (Math.random()-0.5)*3, -1); } });
     cityEffects.push({ type:'laser', y:py, life:14, max:14 });
   } else if (cityTool === 'wreck'){
     const R = 55;
-    cityBricks.forEach(b => { if (Math.hypot(b.x + BRICK/2 - px, b.y + BRICK/2 - py) < R) kill(b); });
+    cityBricks.forEach(b => { if (b.alive && Math.hypot(b.x+BRICK/2-px, b.y+BRICK/2-py) < R) blast(b, px, py, 3.2); });
     cityEffects.push({ type:'boom', x:px, y:py, r:R, life:20, max:20 });
   }
+  earned += collapseUnsupported();     // unsupported chunks tumble down too
   if (earned) addMoney(earned);
   if (cityBricks.length && cityBricks.every(b => !b.alive)){ addMoney(25); buildCity(); }  // cleared: bonus + new city
 }
@@ -2479,15 +2857,228 @@ document.querySelectorAll('.city-tool').forEach(b => b.onclick = () => selectCit
 
 function openCity(){
   cityView.classList.add('open'); document.body.classList.add('city-open'); document.body.style.overflow = 'hidden';
+  debugLog('Launching', 'Destroy the City');
   cityBestEl.textContent = '$' + cityBest();
   cityMoney = 0; cityMoneyEl.textContent = '$0';
+  cityDebris = []; cityEffects = [];
   selectCityTool('hammer');
   requestAnimationFrame(() => { sizeCityCanvas(); buildCity(); if (!cityRAF) cityLoop(); });
 }
 function closeCity(){ cityView.classList.remove('open'); document.body.classList.remove('city-open'); document.body.style.overflow = ''; if (cityRAF){ cancelAnimationFrame(cityRAF); cityRAF = null; } }
 document.getElementById('cityClose').onclick = closeCity;
-document.getElementById('cityReset').onclick = () => { cityMoney = 0; cityMoneyEl.textContent = '$0'; buildCity(); };
+document.getElementById('cityReset').onclick = () => { cityMoney = 0; cityMoneyEl.textContent = '$0'; cityDebris = []; cityEffects = []; buildCity(); };
 window.addEventListener('resize', () => { if (cityView.classList.contains('open')){ sizeCityCanvas(); buildCity(); } });
+
+/* ================= DASHBOARD EDITOR ================= */
+const editorView = document.getElementById('editorView');
+const editorBoard = document.getElementById('editorBoard');
+const customLayer = document.getElementById('customLayer');
+const edProps = document.getElementById('edProps');
+const edBgPanel = document.getElementById('edBgPanel');
+const edColor = document.getElementById('edColor'), edFill = document.getElementById('edFill'), edSize = document.getElementById('edSize'), edLink = document.getElementById('edLink');
+const edColorRow = document.getElementById('edColorRow'), edFillRow = document.getElementById('edFillRow'), edSizeRow = document.getElementById('edSizeRow'), edLinkRow = document.getElementById('edLinkRow');
+let edEls = [], edBg = null, edSelected = null, edDirty = false, edMode = 'default';
+
+function loadDash(){ try { return JSON.parse(localStorage.getItem('lac_dashboard') || 'null'); } catch(e){ return null; } }
+function saveDash(){ localStorage.setItem('lac_dashboard', JSON.stringify({ mode: edMode, bg: edBg, els: edEls })); }
+function applyDashMode(){ const saved = loadDash(); document.body.classList.toggle('custom-dash', !!(saved && saved.mode === 'new')); }
+function fmtTime(){ const d = new Date(); let h = d.getHours(); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return h + ':' + String(d.getMinutes()).padStart(2,'0') + ' ' + ap; }
+setInterval(() => { document.querySelectorAll('.ed-clock .clock-time').forEach(t => t.textContent = fmtTime()); }, 1000);
+function layer(dir){
+  const i = edEls.findIndex(x => x.id === edSelected); if (i < 0) return;
+  const el = edEls[i];
+  if (dir === 'front'){ edEls.splice(i,1); edEls.push(el); }
+  else if (dir === 'back'){ edEls.splice(i,1); edEls.unshift(el); }
+  else if (dir === 'fwd' && i < edEls.length - 1){ edEls[i] = edEls[i+1]; edEls[i+1] = el; }
+  else if (dir === 'back1' && i > 0){ edEls[i] = edEls[i-1]; edEls[i-1] = el; }
+  edDirty = true; renderEditor(); selectEl(el.id);
+}
+const edSel = () => edEls.find(x => x.id === edSelected);
+
+function applyBg(target, bg){
+  if (!bg){ target.style.background = ''; return; }
+  if (bg.type === 'image') target.style.background = 'center/cover no-repeat url(' + bg.value + ')';
+  else target.style.background = bg.value;   // color or gradient
+}
+function buildEl(el, editable){
+  const node = document.createElement('div');
+  node.className = 'ed-el ed-' + el.type;
+  node.dataset.id = el.id;
+  node.style.left = el.x + 'px'; node.style.top = el.y + 'px';
+  if (el.w) node.style.width = el.w + 'px';
+  if (el.h && el.type === 'image') node.style.height = el.h + 'px';
+  if (el.color) node.style.color = el.color;
+  if (el.fill && el.type !== 'text' && el.type !== 'image') node.style.background = el.fill;
+  if (el.size) node.style.fontSize = el.size + 'px';
+  if (el.type === 'image'){ const img = document.createElement('img'); img.src = el.src; img.draggable = false; node.appendChild(img); }
+  else if (el.type === 'courses'){
+    const h = document.createElement('div'); h.style.cssText = 'font-weight:800;margin-bottom:8px'; h.textContent = 'Courses';
+    node.appendChild(h);
+    const list = document.createElement('div'); list.className = 'ed-courses-list';
+    courses.forEach(c => {
+      const a = document.createElement(editable ? 'div' : 'a');
+      a.className = 'ed-course-link'; a.textContent = c.code + ' · ' + c.name;
+      if (!editable){ a.href = BASE + '/courses/' + c.id; a.target = '_blank'; a.rel = 'noopener'; }
+      list.appendChild(a);
+    });
+    node.appendChild(list);
+  }
+  else if (el.type === 'clock'){ const ct = document.createElement('div'); ct.className = 'clock-time'; ct.textContent = fmtTime(); node.appendChild(ct); }
+  else if (el.type === 'divider'){ /* a plain coloured bar, no content */ }
+  else node.appendChild(document.createTextNode(el.text || ''));
+  if (editable){
+    if (!['image','courses','clock','divider'].includes(el.type)){
+      node.addEventListener('dblclick', () => { node.contentEditable = 'true'; node.focus(); });
+      node.addEventListener('blur', () => { node.contentEditable = 'false'; el.text = node.textContent; edDirty = true; });
+    }
+    node.addEventListener('mousedown', e => startEdDrag(e, el, node));
+    node.addEventListener('click', e => { e.stopPropagation(); selectEl(el.id); });
+    if (['image','card','courses','note','divider','clock'].includes(el.type)){
+      const h = document.createElement('div'); h.className = 'ed-resize'; h.contentEditable = 'false';
+      h.addEventListener('mousedown', e => startEdResize(e, el, node));
+      node.appendChild(h);
+    }
+  } else {
+    node.style.pointerEvents = (el.type === 'button' && el.href) ? 'auto' : 'none';
+    if (el.type === 'button' && el.href) node.addEventListener('click', () => window.open(el.href, '_blank', 'noopener'));
+  }
+  return node;
+}
+function renderEditor(){
+  if (edMode === 'new') applyBg(editorBoard, edBg || { type:'color', value: (getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#eef1f7') });
+  else { if (edBg) applyBg(editorBoard, edBg); else editorBoard.style.background = 'transparent'; }   // default: show the real dashboard behind
+  editorBoard.innerHTML = '';
+  edEls.forEach(el => editorBoard.appendChild(buildEl(el, true)));
+  editorBoard.querySelectorAll('.ed-el').forEach(n => n.classList.toggle('sel', n.dataset.id === edSelected));
+  updateProps();
+}
+function renderCustomLayer(){
+  const saved = loadDash();
+  customLayer.innerHTML = '';
+  applyBg(customLayer, (saved && saved.mode === 'new') ? saved.bg : null);
+  applyDashMode();
+  if (!saved) return;
+  (saved.els || []).forEach(el => customLayer.appendChild(buildEl(el, false)));
+}
+function selectEl(id){
+  edSelected = id;
+  editorBoard.querySelectorAll('.ed-el').forEach(n => n.classList.toggle('sel', n.dataset.id === id));
+  edBgPanel.classList.remove('show');
+  updateProps();
+}
+function updateProps(){
+  const el = edSel();
+  if (!el){ edProps.classList.remove('show'); return; }
+  edProps.classList.add('show');
+  edColor.value = el.color || '#1a2238';
+  edFill.value = el.fill || '#ffffff';
+  edSize.value = el.size || 18;
+  edColorRow.style.display = (el.type === 'image' || el.type === 'divider') ? 'none' : 'flex';
+  edFillRow.style.display = ['card','button','note','divider','clock','courses'].includes(el.type) ? 'flex' : 'none';
+  edSizeRow.style.display = (el.type === 'image' || el.type === 'divider') ? 'none' : 'flex';
+  edLinkRow.style.display = el.type === 'button' ? 'flex' : 'none';
+  edLink.value = el.href || '';
+}
+function applyToNode(){
+  const el = edSel(); if (!el) return;
+  const node = editorBoard.querySelector('.ed-el[data-id="' + el.id + '"]'); if (!node) return;
+  if (el.color) node.style.color = el.color;
+  if (el.fill && el.type !== 'text' && el.type !== 'image') node.style.background = el.fill;
+  if (el.size) node.style.fontSize = el.size + 'px';
+}
+function startEdDrag(e, el, node){
+  if (node.isContentEditable || e.target.classList.contains('ed-resize')) return;
+  e.preventDefault(); selectEl(el.id);
+  const rect = editorBoard.getBoundingClientRect();
+  const offX = e.clientX - (rect.left + el.x), offY = e.clientY - (rect.top + el.y);
+  const move = ev => { el.x = Math.round(ev.clientX - rect.left - offX); el.y = Math.round(ev.clientY - rect.top - offY); node.style.left = el.x + 'px'; node.style.top = el.y + 'px'; edDirty = true; };
+  const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+  window.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
+}
+function startEdResize(e, el, node){
+  e.preventDefault(); e.stopPropagation();
+  const sx = e.clientX, sy = e.clientY, w0 = node.offsetWidth, h0 = node.offsetHeight;
+  const move = ev => { el.w = Math.max(40, Math.round(w0 + ev.clientX - sx)); node.style.width = el.w + 'px'; if (el.type === 'image'){ el.h = Math.max(40, Math.round(h0 + ev.clientY - sy)); node.style.height = el.h + 'px'; } edDirty = true; };
+  const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+  window.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
+}
+function addEl(type){
+  const id = 'e' + Date.now() + Math.floor(Math.random() * 999);
+  const base = { id, type, x: 140 + Math.random() * 90, y: 140 + Math.random() * 90 };
+  if (type === 'text') Object.assign(base, { text: 'New text', color: '#1a2238', size: 26 });
+  else if (type === 'heading') Object.assign(base, { text: 'Heading', color: '#1a2238', size: 40 });
+  else if (type === 'card') Object.assign(base, { text: 'New card', color: '#1a2238', fill: '#ffffff', size: 16, w: 200 });
+  else if (type === 'note') Object.assign(base, { text: 'Sticky note', color: '#5a4b00', fill: '#fff3b0', size: 15, w: 180 });
+  else if (type === 'button') Object.assign(base, { text: 'Button', color: '#ffffff', fill: '#2f5fd6', size: 15, href: '' });
+  else if (type === 'sticker') Object.assign(base, { text: '🌟', size: 56 });
+  else if (type === 'divider') Object.assign(base, { fill: '#2f5fd6', w: 220 });
+  else if (type === 'clock') Object.assign(base, { color: '#1a2238', fill: '#ffffff', size: 22, w: 160 });
+  edEls.push(base); edDirty = true; renderEditor(); selectEl(id);
+  debugLog('Editor', 'Added ' + type);
+}
+document.querySelectorAll('.ed-tool[data-add]').forEach(b => b.onclick = () => addEl(b.dataset.add));
+
+edColor.oninput = () => { const el = edSel(); if (el){ el.color = edColor.value; applyToNode(); edDirty = true; } };
+edFill.oninput  = () => { const el = edSel(); if (el){ el.fill = edFill.value; applyToNode(); edDirty = true; } };
+edSize.oninput  = () => { const el = edSel(); if (el){ el.size = +edSize.value; applyToNode(); edDirty = true; } };
+edLink.oninput  = () => { const el = edSel(); if (el){ el.href = edLink.value; edDirty = true; } };
+document.getElementById('edDelete').onclick = () => { const el = edSel(); if (el){ edEls = edEls.filter(x => x !== el); edSelected = null; edDirty = true; renderEditor(); } };
+edProps.querySelectorAll('.ed-layer button').forEach(b => b.onclick = () => layer(b.dataset.layer));
+
+const edImageInput = document.getElementById('edImageInput'), edBgInput = document.getElementById('edBgInput');
+document.getElementById('edAddImage').onclick = () => edImageInput.click();
+edImageInput.onchange = e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { const id = 'e' + Date.now(); edEls.push({ id, type: 'image', x: 150, y: 150, w: 220, src: r.result }); edDirty = true; renderEditor(); selectEl(id); }; r.readAsDataURL(f); e.target.value = ''; };
+
+document.getElementById('edBgBtn').onclick = () => { edProps.classList.remove('show'); edBgPanel.classList.toggle('show'); };
+const edBgSwatches = document.getElementById('edBgSwatches');
+['linear-gradient(135deg,#2f5fd6,#5b8def)','linear-gradient(135deg,#1f9d6b,#48c78e)','linear-gradient(135deg,#c0397a,#e86aa6)','linear-gradient(135deg,#e2703a,#f4a259)','linear-gradient(135deg,#0f1320,#161c2e)'].forEach(g => {
+  const s = document.createElement('div'); s.className = 'ed-bg-sw'; s.style.background = g;
+  s.onclick = () => { edBg = { type: 'gradient', value: g }; applyBg(editorBoard, edBg); edDirty = true; };
+  edBgSwatches.appendChild(s);
+});
+document.getElementById('edBgColor').oninput = e => { edBg = { type: 'color', value: e.target.value }; applyBg(editorBoard, edBg); edDirty = true; };
+document.getElementById('edBgImage').onclick = () => edBgInput.click();
+edBgInput.onchange = e => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => { edBg = { type: 'image', value: r.result }; applyBg(editorBoard, edBg); edDirty = true; }; r.readAsDataURL(f); e.target.value = ''; };
+
+editorBoard.addEventListener('click', e => { if (e.target === editorBoard){ edSelected = null; updateProps(); edBgPanel.classList.remove('show'); editorBoard.querySelectorAll('.ed-el.sel').forEach(n => n.classList.remove('sel')); } });
+
+function makeCoursesEl(){ return { id: 'courses' + Date.now(), type: 'courses', x: 60, y: 90, w: 320, color: '#1a2238', fill: '#ffffff', size: 14 }; }
+const edStartScrim = document.getElementById('edStartScrim');
+function openEditor(){ closePanels(); resetWinPos(edStartScrim); edStartScrim.classList.add('open'); debugLog('Launching', 'Dashboard Editor'); }
+function beginEditor(mode){
+  edStartScrim.classList.remove('open');
+  const saved = loadDash();
+  edMode = mode;
+  if (mode === 'default'){
+    edEls = saved && saved.els ? JSON.parse(JSON.stringify(saved.els)) : [];
+    edBg = saved && saved.bg ? saved.bg : null;
+    edDirty = false;
+  } else {                                  // new: blank board, but keep the Courses
+    edEls = [ makeCoursesEl() ];
+    edBg = null; edDirty = true;
+  }
+  edSelected = null;
+  renderEditor();
+  editorView.classList.add('open'); document.body.classList.add('editor-open'); document.body.style.overflow = 'hidden';
+  debugLog('Editor', mode === 'new' ? 'New dashboard' : 'Editing default');
+}
+document.getElementById('edStartDefault').onclick = () => beginEditor('default');
+document.getElementById('edStartNew').onclick = () => beginEditor('new');
+document.getElementById('edStartClose').onclick = () => edStartScrim.classList.remove('open');
+edStartScrim.addEventListener('click', e => { if (e.target === edStartScrim) edStartScrim.classList.remove('open'); });
+makeDraggable(edStartScrim.querySelector('.win-card'), edStartScrim.querySelector('.win-bar'), false);
+function closeEditor(){ editorView.classList.remove('open'); document.body.classList.remove('editor-open'); document.body.style.overflow = ''; edBgPanel.classList.remove('show'); }
+document.getElementById('editorBtn').onclick = openEditor;
+document.getElementById('edSave').onclick = () => { saveDash(); edDirty = false; renderCustomLayer(); showToast('💾', '#1f9d6b', 'Dashboard saved', 'Your layout is stored'); };
+document.getElementById('edReset').onclick = () => { edEls = []; edBg = null; edSelected = null; edDirty = true; renderEditor(); showToast('↺', '#e5484d', 'Editor reset', 'Cleared — Save to make it stick'); };
+document.getElementById('edClose').onclick = () => { if (edDirty) document.getElementById('edWarnScrim').classList.add('open'); else closeEditor(); };
+
+const edWarnScrim = document.getElementById('edWarnScrim');
+document.getElementById('edWarnSave').onclick = () => { saveDash(); edDirty = false; renderCustomLayer(); edWarnScrim.classList.remove('open'); closeEditor(); showToast('💾', '#1f9d6b', 'Dashboard saved', 'Your layout is stored'); };
+document.getElementById('edWarnDiscard').onclick = () => { edDirty = false; edWarnScrim.classList.remove('open'); closeEditor(); };
+document.getElementById('edWarnClose').onclick = () => edWarnScrim.classList.remove('open');
+
+renderCustomLayer();  // paint saved elements onto the dashboard on load
 
 /* ================= LOADING SCREEN ================= */
 const loader = document.getElementById('loader');
