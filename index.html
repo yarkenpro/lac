@@ -871,6 +871,27 @@
   .toast .t-txt b { font-size: 13.5px; font-weight: 800; display: block; }
   .toast .t-txt span { font-size: 12px; color: var(--muted); }
 
+  /* ---------------- DESTROY THE CITY GAME ---------------- */
+  #cityView { position: fixed; inset: 0; z-index: 140; display: none; flex-direction: column; background: #10121c; }
+  #cityView.open { display: flex; }
+  #cityView, #cityView * { cursor: auto !important; }
+  #cityView button { cursor: pointer !important; }
+  #cityCanvas { cursor: crosshair !important; }
+  body.city-open .cursor-dot, body.city-open .cursor-ring { display: none !important; }
+  .city-top { display: flex; align-items: center; gap: 16px; padding: 12px 16px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; flex-wrap: wrap; }
+  .city-stats { display: flex; align-items: center; gap: 14px; font-weight: 800; }
+  .city-money { font-size: 18px; }
+  .city-best { font-size: 13px; opacity: .9; font-weight: 700; }
+  .city-reset { border: 1px solid rgba(255,255,255,.5); background: rgba(255,255,255,.15); color: #fff; font-family: inherit; font-weight: 700; font-size: 12px; padding: 7px 12px; border-radius: 8px; }
+  .city-reset:hover { background: rgba(255,255,255,.28); }
+  .city-tools { display: flex; gap: 8px; flex: 1; justify-content: center; flex-wrap: wrap; }
+  .city-tool { border: 1px solid rgba(255,255,255,.4); background: rgba(255,255,255,.12); color: #fff; font-family: inherit; font-weight: 700; font-size: 13px; padding: 8px 12px; border-radius: 10px; transition: all .15s ease; }
+  .city-tool:hover { background: rgba(255,255,255,.25); }
+  .city-tool.active { background: #fff; color: var(--accent); }
+  .city-close { border: none; background: rgba(255,255,255,.22); color: #fff; width: 36px; height: 36px; border-radius: 50%; font-size: 22px; display: grid; place-items: center; transition: all .15s ease; flex: none; }
+  .city-close:hover { transform: rotate(90deg); background: rgba(255,255,255,.35); }
+  #cityCanvas { flex: 1; width: 100%; display: block; touch-action: none; }
+
   @media print { #loader, #succession, #appsView, .detail-scrim, .sidebar, .fab-wrap, .panel, .scrim, .top-actions, .menu-btn, #toTop, .cursor-dot, .cursor-ring { display: none !important; } .main { margin: 0; } }
 </style>
 </head>
@@ -1168,6 +1189,25 @@
   </div>
 </div>
 
+<!-- DESTROY THE CITY GAME (fullscreen) -->
+<div id="cityView">
+  <div class="city-top">
+    <div class="city-stats">
+      <span class="city-money">💰 <span id="cityMoney">$0</span></span>
+      <span class="city-best">Best <span id="cityBest">$0</span></span>
+      <button class="city-reset" id="cityReset">Reset score</button>
+    </div>
+    <div class="city-tools">
+      <button class="city-tool active" data-tool="hammer">🔨 Hammer</button>
+      <button class="city-tool" data-tool="bomb">💣 Bomb</button>
+      <button class="city-tool" data-tool="laser">🔫 Laser Gun</button>
+      <button class="city-tool" data-tool="wreck">🏗️ Wrecking Ball</button>
+    </div>
+    <button class="city-close" id="cityClose" aria-label="Close">&times;</button>
+  </div>
+  <canvas id="cityCanvas"></canvas>
+</div>
+
 <!-- FAKE CRASH BLUE SCREEN -->
 <div id="crashBSOD">
   <div class="bsod-face">:(</div>
@@ -1454,7 +1494,7 @@ copyBtn.onclick = async () => {
 };
 
 document.getElementById('clearPrefsBtn').onclick = () => {
-  ['mode','accent','glass','motion','cursor','rainbowmouse','rainbow','found'].forEach(k => localStorage.removeItem('lac_'+k));
+  ['mode','accent','glass','motion','cursor','rainbowmouse','rainbow','found','city_best'].forEach(k => localStorage.removeItem('lac_'+k));
   location.reload();
 };
 
@@ -1780,9 +1820,13 @@ function tryRedeem(){
     applyRainbowAll(on);
     showRedeemMsg(on ? '🌈 Everything is rainbow! (saved to Extensions)' : 'Rainbow off.', true);
     redeemInput.value = '';
+  } else if (['roblox destroy a city','roblox destory a city','destroy a city','destory a city'].includes(code)) {
+    addFound('city');
+    showRedeemMsg('🏙️ Loading Destroy the City… (saved to Extensions)', true);
+    redeemInput.value = '';
+    closePanels();
+    setTimeout(openCity, 340);
   } else {
-    showRedeemMsg('That code didn’t work.', false);
-    redeemInput.select();
   }
 }
 document.getElementById('redeemBtn').onclick = tryRedeem;
@@ -2179,6 +2223,8 @@ const EXTENSIONS = [
     desc:'Wash the whole dashboard in slowly cycling rainbow colours.' },
   { id:'rainbowmouse', name:'Rainbow Mouse', code:'rainbow mouse', type:'toggle', rating:'4.4', color:'#e2703a', icon:'🖱️',
     desc:'Your cursor cycles through every colour of the rainbow.' },
+  { id:'city', name:'Destroy the City', code:'roblox destroy a city', type:'action', action:'Launch', rating:'4.7', color:'#e2703a', icon:'🏙️',
+    desc:'Smash a whole city to rubble with a hammer, bombs, a laser gun and a wrecking ball. Every brick you break earns cash.' },
 ];
 const extScrim = document.getElementById('extScrim');
 const extList = document.getElementById('extList');
@@ -2217,7 +2263,7 @@ function renderExtensions(filter=''){
 
     if (e.type === 'action'){
       const b = document.createElement('button'); b.className = 'ext-btn'; b.textContent = e.action;
-      b.onclick = () => { closeExt(); if (e.id === 'snake') openGame(); else runErrorCode(); };
+      b.onclick = () => { closeExt(); if (e.id === 'snake') openGame(); else if (e.id === 'city') openCity(); else runErrorCode(); };
       row.appendChild(b);
     } else {
       const on = e.id === 'rainbow' ? document.body.classList.contains('rainbow-all') : document.body.classList.contains('rainbow-cursor');
@@ -2264,7 +2310,8 @@ document.getElementById('rbPropsClose').onclick = closeRbProps;
 rbPropsScrim.addEventListener('click', e => { if (e.target === rbPropsScrim) closeRbProps(); });
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
-  if (shareScrim.classList.contains('open')) closeShare();
+  if (cityView.classList.contains('open')) closeCity();
+  else if (shareScrim.classList.contains('open')) closeShare();
   else if (snakeResetScrim.classList.contains('open')) snakeResetScrim.classList.remove('open');
   else if (rbPropsScrim.classList.contains('open')) closeRbProps();
   else if (extScrim.classList.contains('open')) closeExt();
@@ -2333,6 +2380,114 @@ document.getElementById('snakeResetYes').onclick = () => {
 };
 snakeResetScrim.addEventListener('click', e => { if (e.target === snakeResetScrim) snakeResetScrim.classList.remove('open'); });
 makeDraggable(snakeResetScrim.querySelector('.win-card'), snakeResetScrim.querySelector('.win-bar'), false);
+
+/* ================= DESTROY THE CITY GAME ================= */
+const cityView = document.getElementById('cityView');
+const cityCanvas = document.getElementById('cityCanvas');
+const cctx = cityCanvas.getContext('2d');
+const cityMoneyEl = document.getElementById('cityMoney');
+const cityBestEl = document.getElementById('cityBest');
+const BRICK = 24;
+let cityBricks = [], cityEffects = [], cityMoney = 0, cityTool = 'hammer', cityRAF = null, cityDown = false;
+
+function cityBest(){ return parseInt(localStorage.getItem('lac_city_best') || '0', 10); }
+function setCityBest(v){ localStorage.setItem('lac_city_best', v); cityBestEl.textContent = '$' + v; }
+function addMoney(n){ if (!n) return; cityMoney += n; cityMoneyEl.textContent = '$' + cityMoney; if (cityMoney > cityBest()) setCityBest(cityMoney); }
+
+function sizeCityCanvas(){ const r = cityCanvas.getBoundingClientRect(); cityCanvas.width = Math.max(320, Math.floor(r.width)); cityCanvas.height = Math.max(240, Math.floor(r.height)); }
+
+function buildCity(){
+  cityBricks = [];
+  const W = cityCanvas.width, H = cityCanvas.height;
+  const groundY = H - BRICK * 1.5;
+  const palette = ['#6b7a99','#7d8aa8','#8a6d5b','#9a5b5b','#5b8a7d','#c9a24b','#7263a6'];
+  let x = BRICK;
+  while (x < W - BRICK * 3){
+    const bw = 3 + Math.floor(Math.random() * 4);          // bricks wide
+    const bh = 4 + Math.floor(Math.random() * Math.min(12, Math.floor((groundY) / BRICK) - 2)); // bricks tall
+    const col = palette[Math.floor(Math.random() * palette.length)];
+    const topY = groundY - bh * BRICK;
+    for (let r = 0; r < bh; r++)
+      for (let c = 0; c < bw; c++)
+        cityBricks.push({ x: x + c * BRICK, y: topY + r * BRICK, alive: true, color: col, win: Math.random() < 0.25 });
+    x += bw * BRICK + BRICK;                                 // gap between buildings
+  }
+}
+
+function drawCity(){
+  const W = cityCanvas.width, H = cityCanvas.height;
+  const sky = cctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0, '#243063'); sky.addColorStop(1, '#7d4f92');
+  cctx.fillStyle = sky; cctx.fillRect(0, 0, W, H);
+  cctx.fillStyle = '#2b2f3a'; cctx.fillRect(0, H - BRICK * 1.5, W, BRICK * 1.5);
+  cityBricks.forEach(b => {
+    if (!b.alive) return;
+    cctx.fillStyle = b.color; cctx.fillRect(b.x, b.y, BRICK - 2, BRICK - 2);
+    if (b.win){ cctx.fillStyle = 'rgba(255,240,180,.55)'; cctx.fillRect(b.x + 4, b.y + 4, BRICK - 10, BRICK - 10); }
+  });
+  cityEffects.forEach(fx => {
+    const t = fx.life / fx.max;
+    if (fx.type === 'boom'){ cctx.beginPath(); cctx.arc(fx.x, fx.y, fx.r * (1 - t) + fx.r * 0.15, 0, 7); cctx.strokeStyle = 'rgba(255,170,50,' + t + ')'; cctx.lineWidth = 5; cctx.stroke(); }
+    else if (fx.type === 'laser'){ cctx.fillStyle = 'rgba(255,60,60,' + t + ')'; cctx.fillRect(0, fx.y - 15, W, 30); }
+    else if (fx.type === 'hit'){ cctx.fillStyle = 'rgba(255,255,255,' + t + ')'; cctx.beginPath(); cctx.arc(fx.x, fx.y, 12 * (1 - t) + 4, 0, 7); cctx.fill(); }
+  });
+}
+
+function cityLoop(){
+  for (let i = cityEffects.length - 1; i >= 0; i--) if (--cityEffects[i].life <= 0) cityEffects.splice(i, 1);
+  drawCity();
+  cityRAF = requestAnimationFrame(cityLoop);
+}
+
+function cityHitAt(px, py){
+  let earned = 0;
+  const kill = b => { if (b.alive) { b.alive = false; earned += b.win ? 3 : 1; } };
+  if (cityTool === 'hammer'){
+    cityBricks.forEach(b => { if (Math.hypot(b.x + BRICK/2 - px, b.y + BRICK/2 - py) < 18) kill(b); });
+    cityEffects.push({ type:'hit', x:px, y:py, life:12, max:12 });
+  } else if (cityTool === 'bomb'){
+    const R = 85;
+    cityBricks.forEach(b => { if (Math.hypot(b.x + BRICK/2 - px, b.y + BRICK/2 - py) < R) kill(b); });
+    cityEffects.push({ type:'boom', x:px, y:py, r:R, life:24, max:24 });
+  } else if (cityTool === 'laser'){
+    cityBricks.forEach(b => { if (Math.abs(b.y + BRICK/2 - py) < 16) kill(b); });
+    cityEffects.push({ type:'laser', y:py, life:14, max:14 });
+  } else if (cityTool === 'wreck'){
+    const R = 55;
+    cityBricks.forEach(b => { if (Math.hypot(b.x + BRICK/2 - px, b.y + BRICK/2 - py) < R) kill(b); });
+    cityEffects.push({ type:'boom', x:px, y:py, r:R, life:20, max:20 });
+  }
+  if (earned) addMoney(earned);
+  if (cityBricks.length && cityBricks.every(b => !b.alive)){ addMoney(25); buildCity(); }  // cleared: bonus + new city
+}
+
+function cityPoint(e){
+  const r = cityCanvas.getBoundingClientRect();
+  const cx = e.touches ? e.touches[0].clientX : e.clientX;
+  const cy = e.touches ? e.touches[0].clientY : e.clientY;
+  cityHitAt(cx - r.left, cy - r.top);
+}
+cityCanvas.addEventListener('mousedown', e => { cityDown = true; cityPoint(e); });
+cityCanvas.addEventListener('mousemove', e => { if (cityDown) cityPoint(e); });
+window.addEventListener('mouseup', () => cityDown = false);
+cityCanvas.addEventListener('touchstart', e => { cityDown = true; cityPoint(e); e.preventDefault(); }, { passive:false });
+cityCanvas.addEventListener('touchmove', e => { if (cityDown) cityPoint(e); e.preventDefault(); }, { passive:false });
+window.addEventListener('touchend', () => cityDown = false);
+
+function selectCityTool(t){ cityTool = t; document.querySelectorAll('.city-tool').forEach(b => b.classList.toggle('active', b.dataset.tool === t)); }
+document.querySelectorAll('.city-tool').forEach(b => b.onclick = () => selectCityTool(b.dataset.tool));
+
+function openCity(){
+  cityView.classList.add('open'); document.body.classList.add('city-open'); document.body.style.overflow = 'hidden';
+  cityBestEl.textContent = '$' + cityBest();
+  cityMoney = 0; cityMoneyEl.textContent = '$0';
+  selectCityTool('hammer');
+  requestAnimationFrame(() => { sizeCityCanvas(); buildCity(); if (!cityRAF) cityLoop(); });
+}
+function closeCity(){ cityView.classList.remove('open'); document.body.classList.remove('city-open'); document.body.style.overflow = ''; if (cityRAF){ cancelAnimationFrame(cityRAF); cityRAF = null; } }
+document.getElementById('cityClose').onclick = closeCity;
+document.getElementById('cityReset').onclick = () => { cityMoney = 0; cityMoneyEl.textContent = '$0'; buildCity(); };
+window.addEventListener('resize', () => { if (cityView.classList.contains('open')){ sizeCityCanvas(); buildCity(); } });
 
 /* ================= LOADING SCREEN ================= */
 const loader = document.getElementById('loader');
