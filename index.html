@@ -707,6 +707,26 @@
   .sm-seg { display: flex; gap: 4px; }
   .sm-seg button { border: 1px solid var(--line); background: transparent; color: var(--ink); font-family: inherit; font-weight: 700; font-size: 12px; padding: 6px 9px; border-radius: 8px; cursor: pointer; text-transform: capitalize; }
   .sm-seg button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .sm-input { flex: 0 0 150px; border: 1px solid var(--line); background: transparent; color: var(--ink); font-family: inherit; font-weight: 700; font-size: 13px; padding: 7px 9px; border-radius: 8px; }
+  .sm-input:focus { outline: none; border-color: var(--accent); }
+  .sm-bp-wrap { display: flex; gap: 10px; }
+  .sm-bp { flex: 1; border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .sm-bp-h { font-size: 12.5px; font-weight: 800; }
+  .sm-bp-slots { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .sm-bp-slot { position: relative; aspect-ratio: 1; border: 1px solid var(--line); background: transparent; color: var(--ink); border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 17px; padding: 0; }
+  .sm-bp-slot.sel { border-color: var(--accent); box-shadow: 0 0 0 2px color-mix(in srgb,var(--accent) 40%,transparent); }
+  .sm-bp-slot .n { position: absolute; top: 1px; left: 3px; font-size: 9px; font-weight: 800; color: var(--muted); }
+  .sm-bp-slot .d { position: absolute; bottom: 0; left: 0; right: 0; font-size: 8px; font-weight: 700; color: var(--muted); text-align: center; }
+  .sm-bp-slot .e { color: var(--muted); opacity: .5; }
+  .sm-bp-wait { font-size: 11.5px; font-weight: 700; color: var(--accent); text-align: center; padding: 8px; border: 1px dashed var(--line); border-radius: 8px; }
+  .bp-win { position: fixed; z-index: 400; width: 250px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); overflow: hidden; }
+  .bp-win-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 12px; background: color-mix(in srgb,var(--ink) 6%,transparent); cursor: grab; user-select: none; }
+  .bp-win-bar .t { font-size: 13px; font-weight: 800; }
+  .bp-win-x { border: none; background: transparent; color: var(--muted); font-size: 20px; line-height: 1; cursor: pointer; padding: 0 4px; }
+  .bp-win-x:hover { color: var(--accent); }
+  .bp-win-body { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .bp-win-meta { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .bp-win-wait { font-size: 12.5px; font-weight: 700; color: var(--accent); text-align: center; padding: 16px 8px; }
   .game-win.maxi { position: fixed !important; inset: 2vh 2vw !important; width: auto !important; max-width: none !important; margin: 0 !important; height: 96vh; }
   .game-win.maxi .game-body { display: flex; flex-direction: column; height: calc(100% - 52px); overflow: hidden; }
   .game-win.maxi .snake-stage { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
@@ -814,6 +834,8 @@
   .info-icon { background: #2f5fd6 !important; font-family: Georgia, "Times New Roman", serif; font-style: italic; }
   #crashBSOD.failed { animation: bsodRed .08s steps(1) infinite; }
   @keyframes bsodRed { 0%,50%{ background: #ff1224; } 51%,100%{ background: #2a0004; } }
+  #crashTaskbar.failed { animation: tbRed .08s steps(1) infinite; }
+  @keyframes tbRed { 0%,50%{ background: linear-gradient(180deg, #ff2d3a 0%, #c41019 100%); } 51%,100%{ background: linear-gradient(180deg, #2a0004 0%, #120002 100%); } }
 
   /* photosensitive warning — blurs the background and stays on top of everything */
   #epwarn {
@@ -2125,7 +2147,8 @@ let TILES = 16, CELL = 22;
 let snakes = [], foods = [], items = [], zombies = [], bullets = [], walls = [], chests = [], snakeChunk = 1, sFrame = 0, sRunning = false, sOver = false, sWin = false, sWinner = null, sTimeLeft = 0, sLoop = null, sCdIv = null, snakeMenuState = null, audioCtx = null;
 const MOVE_KEYS = ['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'];
 let heldKeys = new Set();
-const snakeCfgDefault = { players:1, opponent:null, mode:'normal', cdWin:'length', cdSecs:60, diff:'normal', size:'medium', sound:true };
+let bpClosed = [false, false], craftPlayer = 0;
+const snakeCfgDefault = { players:1, opponent:null, mode:'normal', cdWin:'length', cdSecs:60, diff:'normal', size:'medium', sound:true, p1name:'Player 1', p2name:'Player 2' };
 let snakeCfg = (() => { try { return Object.assign({}, snakeCfgDefault, JSON.parse(localStorage.getItem('lac_snakecfg') || '{}')); } catch(e){ return {...snakeCfgDefault}; } })();
 function saveSnakeCfg(){ localStorage.setItem('lac_snakecfg', JSON.stringify(snakeCfg)); }
 function snakeBest(){ return parseInt(localStorage.getItem('lac_snake_best') || '0', 10); }
@@ -2166,12 +2189,12 @@ function sizeSnakeCanvas(){
 function newSnake(controls, isAI, headColor, bodyColor, sx, sy, dir){
   const body = [];
   for (let i = 0; i < 3; i++) body.push({ x: sx - i*dir.x, y: sy - i*dir.y });
-  return { body, dir: {...dir}, nextDir: {...dir}, alive: true, apples: 0, hp: 20, shield: 0, slots: [null,null,null,null], slot: 0, wood: 0, controls, isAI, headColor, bodyColor };
+  return { body, dir: {...dir}, nextDir: {...dir}, alive: true, apples: 0, hp: 20, shield: 0, slots: [null,null,null,null,null], slot: 0, wood: 0, controls, isAI, headColor, bodyColor };
 }
 function nameOf(i){
   if (snakeCfg.players === 1) return 'You';
-  if (i === 0) return 'Player 1';
-  return snakes[1] && snakes[1].isAI ? 'AI' : 'Player 2';
+  if (i === 0) return (snakeCfg.p1name || 'Player 1');
+  return snakes[1] && snakes[1].isAI ? 'AI' : (snakeCfg.p2name || 'Player 2');
 }
 function placeFood(){
   const taken = new Set();
@@ -2210,7 +2233,7 @@ function resetSnake(){
   } else {
     snakes.push(newSnake('solo', false, accentC(), accent2C(), 5, Math.floor(TILES/2), {x:1,y:0}));
   }
-  foods = []; items = []; zombies = []; bullets = []; walls = []; chests = []; sFrame = 0; snakeChunk = 1; heldKeys.clear();
+  foods = []; items = []; zombies = []; bullets = []; walls = []; chests = []; sFrame = 0; snakeChunk = 1; heldKeys.clear(); bpClosed = [false, false]; closeMpBackpack();
   placeFood();
   if (snakeCfg.mode === 'realms'){ placeItem(); spawnZombie(); spawnZombie(); placeChest(); snakes.forEach(s => giveWeapon(s, 'knife')); }
   sOver = false; sWin = false; sWinner = null; sRunning = true;
@@ -2267,6 +2290,7 @@ function applyItem(s, it){
   else if (it.type === 'sword'){ giveWeapon(s, 'sword'); s.apples++; }            // ⚔️ pick up sword
   else if (it.type === 'bow'){ giveWeapon(s, 'bow'); s.apples++; }                 // 🏹 pick up bow
   else if (it.type === 'wood'){ s.wood = (s.wood || 0) + 1; }                      // 🪵 building material
+  else if (it.type === 'weapon' && it.weapon){ let i = s.slots.findIndex(x => !x); if (i < 0) i = s.slot; s.slots[i] = it.weapon; s.slot = i; } // 🎒 pick a dropped weapon back up (keeps durability)
 }
 function weaponLabel(s){ const w = curWeapon(s); return w ? ' · ' + w.icon + ' ' + w.dur : ''; }
 function killZombieAt(i){ const z = zombies[i]; if (!z) return; zombies.splice(i, 1); if (Math.random() < 0.5) items.push({ x: z.x, y: z.y, type: 'wood', emoji: '🪵' }); }
@@ -2289,6 +2313,38 @@ function snakeAttack(s){
     bullets.push({ x: head.x + s.dir.x, y: head.y + s.dir.y, dx: s.dir.x, dy: s.dir.y, owner: s, dmg: w.dmg });
     consumeDur(s);
   }
+}
+/* F / Space: attack the NEAREST zombie (melee jabs at it, ranged fires toward it) */
+function attackNearest(s){
+  if (!s || !s.alive || snakeCfg.mode !== 'realms') return;
+  const w = curWeapon(s); if (!w){ showToast('✊', '#e5484d', 'No weapon', 'Equip one from your backpack (E)'); return; }
+  const head = s.body[0];
+  if (!zombies.length) return;
+  let best = -1, bestD = Infinity;
+  zombies.forEach((z, i) => { const d = Math.abs(z.x - head.x) + Math.abs(z.y - head.y); if (d < bestD){ bestD = d; best = i; } });
+  if (best < 0) return;
+  const z = zombies[best];
+  if (!w.ranged){
+    playBeep();
+    if (bestD <= w.range) damageZombie(best, w.dmg, s);   // in reach → hit it
+    else { let dx = Math.sign(z.x - head.x), dy = Math.sign(z.y - head.y); if (dx || dy) s.nextDir = { x: dx && !dy ? dx : (Math.abs(z.x-head.x) >= Math.abs(z.y-head.y) ? dx : 0), y: dy && !dx ? dy : (Math.abs(z.y-head.y) > Math.abs(z.x-head.x) ? dy : 0) }; } // too far → turn toward it
+    consumeDur(s);
+  } else {
+    shootToward(s, z.x, z.y);   // ranged: fire straight at the nearest mob
+  }
+}
+/* Q: drop the equipped weapon onto the cell ahead (can be picked back up) */
+function dropSelected(s){
+  if (!s || !s.alive || snakeCfg.mode !== 'realms') return;
+  const w = curWeapon(s); if (!w){ showToast('🎒', '#e5484d', 'Nothing to drop', 'That slot is empty'); return; }
+  const head = s.body[0];
+  let dx = head.x + s.dir.x, dy = head.y + s.dir.y;
+  if (dx < 0 || dy < 0 || dx >= TILES || dy >= TILES){ dx = head.x; dy = head.y; }
+  items.push({ x: dx, y: dy, type: 'weapon', emoji: w.icon, weapon: w });
+  s.slots[s.slot] = null;
+  playBeep();
+  showToast('👇', '#1f9d6b', 'Dropped ' + w.kind, 'Walk over it to pick it back up');
+  renderHotbar(); drawSnake();
 }
 /* click-to-aim: fire the ranged weapon toward a grid cell */
 function shootToward(s, gx, gy){
@@ -2336,6 +2392,11 @@ function moveZombies(){
     const dx = tgt.x - z.x, dy = tgt.y - z.y;
     const step = Math.abs(dx) > Math.abs(dy) ? { x: Math.sign(dx), y: 0 } : { x: 0, y: Math.sign(dy) };
     const nx = z.x + step.x, ny = z.y + step.y;
+    const st = walls.find(w => w.x === nx && w.y === ny);
+    if (st && !(st.type === 'gate' && st.open)){
+      if (st.type === 'gate'){ st.hp -= 1; if (st.hp <= 0) walls.splice(walls.indexOf(st), 1); }  // zombies smash gates
+      return;   // blocked by wall / portal / closed gate
+    }
     if (!zombies.some(o => o !== z && o.x === nx && o.y === ny)){ z.x = nx; z.y = ny; }
   });
 }
@@ -2447,15 +2508,19 @@ function loadChunk(){
   showToast('🧭', '#2f5fd6', 'Chunk ' + snakeChunk, nChests + ' chest' + (nChests===1?'':'s') + ' to loot here');
 }
 function craft(type){
-  const s = snakes[0]; if (!s) return;
-  const cost = type === 'gate' ? 5 : 3;
+  const s = snakeCfg.players === 2 ? snakes[craftPlayer] : snakes[0]; if (!s) return;
+  const cost = type === 'portal' ? 10 : type === 'gate' ? 5 : 3;
   if ((s.wood||0) < cost){ showToast('🪵', '#e5484d', 'Not enough wood', 'Need ' + cost + ' wood'); return; }
   const hx = s.body[0].x + s.dir.x, hy = s.body[0].y + s.dir.y;
   const blocked = hx < 0 || hy < 0 || hx >= TILES || hy >= TILES || walls.some(w => w.x===hx && w.y===hy) || snakes.some(o => o.body.some(b => b.x===hx && b.y===hy));
   if (blocked){ showToast('🚧', '#e5484d', 'No room', 'Face an empty cell to build'); return; }
   s.wood -= cost;
-  walls.push({ x: hx, y: hy, type });
-  showToast(type === 'gate' ? '🚪' : '🧱', '#1f9d6b', 'Built a ' + type, type === 'gate' ? 'Walk into it → new chunk' : 'A solid barrier');
+  const obj = { x: hx, y: hy, type };
+  if (type === 'gate'){ obj.hp = 10; obj.maxHp = 10; obj.open = false; }
+  walls.push(obj);
+  const icon = type === 'portal' ? '🌀' : type === 'gate' ? '🚪' : '🧱';
+  const desc = type === 'portal' ? 'Walk into it → a new chunk' : type === 'gate' ? 'Click to open/close · zombies can break it (10 HP)' : 'A solid barrier';
+  showToast(icon, '#1f9d6b', 'Built a ' + type, desc);
   closeSnakeMenu(); sRunning = true; updateScoreUI(); drawSnake();
 }
 function stepRealms(){
@@ -2468,7 +2533,10 @@ function stepRealms(){
     const h = { x: s.body[0].x + s.dir.x, y: s.body[0].y + s.dir.y };
     if (h.x < 0 || h.y < 0 || h.x >= TILES || h.y >= TILES) return;   // chunk edge blocks
     const wcell = walls.find(w => w.x === h.x && w.y === h.y);
-    if (wcell){ if (wcell.type === 'gate') loadChunk(); return; }      // gate → new chunk, wall → blocked
+    if (wcell){
+      if (wcell.type === 'portal'){ loadChunk(); return; }               // 🌀 portal → new chunk
+      if (!(wcell.type === 'gate' && wcell.open)) return;                 // wall / closed gate blocks; open gate passes
+    }
     let dead = false;
     snakes.forEach(o => { for (let si = 0; si < o.body.length; si++){ if (o === s && si === o.body.length-1) continue; if (o.body[si].x === h.x && o.body[si].y === h.y) dead = true; } });
     if (dead){ s.alive = false; return; }
@@ -2512,11 +2580,13 @@ function drawSnake(){
   foods.forEach(f => { roundRect(f.x*CELL + CELL*0.14, f.y*CELL + CELL*0.14, CELL*0.72, CELL*0.72, CELL*0.2); sctx.fill(); });
   if (snakeCfg.mode === 'realms'){
     walls.forEach(w => {
-      sctx.fillStyle = w.type === 'gate' ? '#7b6cf6' : '#8a6d5b';
-      roundRect(w.x*CELL + CELL*0.05, w.y*CELL + CELL*0.05, CELL*0.9, CELL*0.9, CELL*0.16); sctx.fill();
+      if (w.type === 'portal'){ sctx.fillStyle = '#7b6cf6'; roundRect(w.x*CELL + CELL*0.05, w.y*CELL + CELL*0.05, CELL*0.9, CELL*0.9, CELL*0.45); sctx.fill(); }
+      else if (w.type === 'gate' && w.open){ sctx.strokeStyle = '#7b6cf6'; sctx.lineWidth = Math.max(2, CELL*0.12); roundRect(w.x*CELL + CELL*0.12, w.y*CELL + CELL*0.12, CELL*0.76, CELL*0.76, CELL*0.16); sctx.stroke(); }
+      else { sctx.fillStyle = w.type === 'gate' ? '#5a4a9e' : '#8a6d5b'; roundRect(w.x*CELL + CELL*0.05, w.y*CELL + CELL*0.05, CELL*0.9, CELL*0.9, CELL*0.16); sctx.fill(); }
+      if (w.type === 'gate'){ const bw = CELL*0.8, bh = Math.max(2, CELL*0.1), bx = w.x*CELL + CELL*0.1, by = w.y*CELL + CELL*0.02; sctx.fillStyle = 'rgba(0,0,0,.45)'; sctx.fillRect(bx, by, bw, bh); sctx.fillStyle = '#f5b301'; sctx.fillRect(bx, by, bw * Math.max(0, w.hp) / w.maxHp, bh); }
     });
     sctx.textAlign = 'center'; sctx.textBaseline = 'middle'; sctx.font = Math.round(CELL*0.8) + 'px system-ui,sans-serif';
-    walls.forEach(w => { if (w.type === 'gate') sctx.fillText('🚪', w.x*CELL + CELL/2, w.y*CELL + CELL/2); });
+    walls.forEach(w => { if (w.type === 'portal') sctx.fillText('🌀', w.x*CELL + CELL/2, w.y*CELL + CELL/2); else if (w.type === 'gate' && !w.open) sctx.fillText('🚪', w.x*CELL + CELL/2, w.y*CELL + CELL/2); });
     chests.forEach(c => sctx.fillText('📦', c.x*CELL + CELL/2, c.y*CELL + CELL/2));
     items.forEach(it => sctx.fillText(it.emoji, it.x*CELL + CELL/2, it.y*CELL + CELL/2));
     sctx.textBaseline = 'alphabetic';
@@ -2576,13 +2646,68 @@ function renderHotbar(){
   hb.style.display = 'flex';
   const s = snakes[0];
   hb.innerHTML = '';
-  for (let i = 0; i < 4; i++){
+  for (let i = 0; i < 5; i++){
     const w = s.slots[i];
     const slot = document.createElement('div'); slot.className = 'hb-slot' + (i === s.slot ? ' sel' : '');
     slot.innerHTML = '<span class="hb-num">' + (i+1) + '</span>' + (w ? ('<span class="hb-ico">' + w.icon + '</span><span class="hb-dur" style="width:' + Math.round(100*w.dur/w.maxDur) + '%"></span>') : '');
     slot.onclick = () => { s.slot = i; renderHotbar(); };
     hb.appendChild(slot);
   }
+}
+
+/* ---- Multiplayer: two separate, draggable inventory windows (E) ---- */
+let bpWins = [null, null];
+function closeMpBackpack(){ bpWins.forEach(w => { if (w && w.parentNode) w.parentNode.removeChild(w); }); bpWins = [null, null]; }
+function renderBpWin(idx){
+  const win = bpWins[idx]; if (!win) return;
+  const s = snakes[idx];
+  const body = win.querySelector('.bp-win-body');
+  if (bpClosed[idx]){
+    body.innerHTML = '<div class="bp-win-wait">✓ Closed<br>Waiting for ' + nameOf(idx === 0 ? 1 : 0) + ' to close their window…</div>';
+    return;
+  }
+  body.innerHTML = '';
+  const meta = document.createElement('div'); meta.className = 'bp-win-meta';
+  meta.textContent = '❤️ ' + s.hp + ' · 🪵 ' + (s.wood||0) + ' · 🍎 ' + s.apples;
+  body.appendChild(meta);
+  const slots = document.createElement('div'); slots.className = 'sm-bp-slots';
+  for (let i = 0; i < 5; i++){
+    const w = s.slots[i];
+    const cell = document.createElement('button'); cell.className = 'sm-bp-slot' + (i === s.slot ? ' sel' : '');
+    cell.innerHTML = '<span class="n">' + (i+1) + '</span>' + (w ? ('<span class="ic">' + w.icon + '</span><span class="d">' + w.dur + '/' + w.maxDur + '</span>') : '<span class="e">—</span>');
+    cell.onclick = () => { s.slot = i; renderBpWin(idx); if (idx === 0) renderHotbar(); };
+    slots.appendChild(cell);
+  }
+  body.appendChild(slots);
+  const hint = document.createElement('div'); hint.className = 'bp-win-meta'; hint.textContent = 'Tap a slot to equip. Drag the bar to move.';
+  body.appendChild(hint);
+}
+function buildBpWin(idx){
+  const win = document.createElement('div'); win.className = 'bp-win';
+  const bar = document.createElement('div'); bar.className = 'bp-win-bar';
+  const t = document.createElement('div'); t.className = 't'; t.textContent = '🎒 ' + nameOf(idx);
+  const x = document.createElement('button'); x.className = 'bp-win-x'; x.setAttribute('aria-label', 'Close'); x.innerHTML = '&times;';
+  x.onclick = () => {
+    bpClosed[idx] = true; playBeep();
+    if (bpClosed[0] && bpClosed[1]){ bpClosed = [false, false]; closeMpBackpack(); if (!sOver && !sWin) sRunning = true; }
+    else { renderBpWin(idx); renderBpWin(idx === 0 ? 1 : 0); }
+  };
+  bar.appendChild(t); bar.appendChild(x);
+  const body = document.createElement('div'); body.className = 'bp-win-body';
+  win.appendChild(bar); win.appendChild(body);
+  document.body.appendChild(win);
+  // position the two windows far apart: P1 left, P2 right
+  win.style.top = '18%';
+  if (idx === 0) win.style.left = '6vw'; else { win.style.right = '6vw'; }
+  bpWins[idx] = win;
+  renderBpWin(idx);
+  makeDraggable(win, bar, true);
+}
+function openMpBackpack(){
+  sRunning = false;
+  bpClosed = [false, false];
+  closeMpBackpack();
+  buildBpWin(0); buildBpWin(1);
 }
 
 /* ---- menu / modes ---- */
@@ -2629,6 +2754,15 @@ function renderMenu(){
     add(smBtn('← Back', () => { snakeMenuState = 'root'; renderMenu(); }, 'ghost'));
   } else if (st === 'mp'){
     title('Multiplayer'); sub('Player 1 = <b>WASD</b> · Player 2 = <b>Arrow keys</b>');
+    const nameRow = (lbl, key) => {
+      const row = document.createElement('div'); row.className = 'sm-row';
+      const l = document.createElement('div'); l.className = 'sm-row-l'; l.textContent = lbl; row.appendChild(l);
+      const inp = document.createElement('input'); inp.className = 'sm-input'; inp.type = 'text'; inp.maxLength = 14; inp.value = snakeCfg[key] || '';
+      inp.oninput = () => { snakeCfg[key] = inp.value.trim() || (key === 'p1name' ? 'Player 1' : 'Player 2'); saveSnakeCfg(); };
+      row.appendChild(inp); return row;
+    };
+    add(nameRow('Player 1 name', 'p1name'));
+    add(nameRow('Player 2 name', 'p2name'));
     add(smBtn('Play with AI', () => { snakeCfg.opponent = 'ai'; snakeMenuState = 'mpmode'; renderMenu(); }));
     add(smBtn('Local Play', () => { snakeCfg.opponent = 'local'; snakeMenuState = 'mpmode'; renderMenu(); }));
     add(smBtn('← Back', () => { snakeMenuState = 'root'; renderMenu(); }, 'ghost'));
@@ -2657,14 +2791,22 @@ function renderMenu(){
     add(smBtn('Reset best score', () => { resetWinPos(snakeResetScrim); snakeResetScrim.classList.add('open'); }, 'ghost'));
     add(smBtn('← Back', () => { snakeMenuState = 'root'; renderMenu(); }, 'ghost'));
   } else if (st === 'craft'){
-    title('🛠 Crafting Table'); sub('Wood: <b>' + (snakes[0] ? (snakes[0].wood||0) : 0) + '</b> · builds in the cell you\'re facing');
+    const cp = snakeCfg.players === 2 ? snakes[craftPlayer] : snakes[0];
+    if (snakeCfg.players === 2){
+      title('🛠 Crafting Table');
+      sub('Crafting for: <b>' + nameOf(craftPlayer) + '</b> · Wood: <b>' + (cp ? (cp.wood||0) : 0) + '</b>');
+      add(smBtn('🔁 Change player (now ' + nameOf(craftPlayer) + ')', () => { craftPlayer = craftPlayer === 0 ? 1 : 0; renderMenu(); }, 'ghost'));
+    } else {
+      title('🛠 Crafting Table'); sub('Wood: <b>' + (cp ? (cp.wood||0) : 0) + '</b> · builds in the cell you\'re facing');
+    }
     add(smBtn('🧱 Wall — 3 🪵', () => craft('wall')));
-    add(smBtn('🚪 Gate — 5 🪵 · portal to a new chunk', () => craft('gate')));
+    add(smBtn('🚪 Gate — 5 🪵 · openable barrier', () => craft('gate')));
+    add(smBtn('🌀 Chunk Portal — 10 🪵 · travel to a new chunk', () => craft('portal')));
     add(smBtn('Resume', () => { closeSnakeMenu(); if (!sOver && !sWin) sRunning = true; }, 'ghost'));
   } else if (st === 'backpack'){
     title('🎒 Backpack'); const s = snakes[0];
-    sub('❤️ ' + s.hp + ' · 🪵 ' + (s.wood||0) + ' · 🍎 ' + s.apples + ' — tap a slot to equip');
-    for (let i = 0; i < 4; i++){
+    sub('❤️ ' + s.hp + ' · 🪵 ' + (s.wood||0) + ' · 🍎 ' + s.apples + ' — tap a slot to equip · Q drops it');
+    for (let i = 0; i < 5; i++){
       const w = s.slots[i];
       const label = (i+1) + '. ' + (w ? (w.icon + ' ' + w.kind + '  (' + w.dur + '/' + w.maxDur + ')') : 'empty');
       add(smBtn(label, () => { s.slot = i; renderMenu(); renderHotbar(); }, i === s.slot ? 'primary' : ''));
@@ -2675,7 +2817,7 @@ function renderMenu(){
     const mc = document.createElement('canvas'); mc.width = 240; mc.height = 240;
     mc.style.cssText = 'width:100%;border-radius:10px;background:color-mix(in srgb,var(--ink) 8%,transparent)'; add(mc);
     const mx = mc.getContext('2d'), cs = mc.width / TILES;
-    walls.forEach(w => { mx.fillStyle = w.type === 'gate' ? '#7b6cf6' : '#8a6d5b'; mx.fillRect(w.x*cs, w.y*cs, cs, cs); });
+    walls.forEach(w => { mx.fillStyle = w.type === 'portal' ? '#37cfc0' : w.type === 'gate' ? '#7b6cf6' : '#8a6d5b'; mx.fillRect(w.x*cs, w.y*cs, cs, cs); });
     chests.forEach(c => { mx.fillStyle = '#d4a017'; mx.fillRect(c.x*cs, c.y*cs, cs, cs); });
     foods.forEach(f => { mx.fillStyle = '#e5484d'; mx.fillRect(f.x*cs, f.y*cs, cs, cs); });
     zombies.forEach(z => { mx.fillStyle = '#3aa655'; mx.fillRect(z.x*cs, z.y*cs, cs, cs); });
@@ -2687,7 +2829,7 @@ function renderMenu(){
 function updateHint(){
   const h = document.getElementById('snakeHint');
   if (snakeCfg.mode === 'realms'){
-    h.textContent = 'Realms: hold to walk · 1-4 pick weapon · Space/click to attack (bow aims at cursor) · E backpack · M map · B build · walk into a 🚪 for a new chunk';
+    h.textContent = 'Realms: hold to walk · 1-5 weapon · F/Space attack nearest mob · Q drop item · click 🚪 open/close · E backpack · M map · B build · walk into 🌀 for a new chunk';
     return;
   }
   if (snakeCfg.players === 2) h.textContent = 'P1: WASD · P2: ' + (snakeCfg.opponent === 'ai' ? 'AI controlled' : 'Arrow keys');
@@ -2711,19 +2853,20 @@ function openGame(){
 function closeGame(){
   gameScrim.classList.remove('open'); gameWin.classList.remove('maxi');
   sRunning = false; clearInterval(sLoop); stopCd();
-  heldKeys.clear();
+  heldKeys.clear(); closeMpBackpack();
   document.removeEventListener('keydown', snakeKey);
   document.removeEventListener('keyup', snakeKeyUp);
 }
 function snakeKey(e){
   const k = e.key.toLowerCase();
-  if (k === 'escape'){ if (snakeMenuOpen()) closeSnakeMenu(); else closeGame(); return; }
+  if (k === 'escape'){ if (bpWins[0] || bpWins[1]){ bpClosed = [false, false]; closeMpBackpack(); if (!sOver && !sWin) sRunning = true; } else if (snakeMenuOpen()) closeSnakeMenu(); else closeGame(); return; }
   if (snakeMenuOpen()) return;
   if (snakeCfg.mode === 'realms'){
-    if (k === 'e'){ openSnakeMenu('backpack'); return; }
+    if (k === 'e'){ if (snakeCfg.players === 2) openMpBackpack(); else { bpClosed = [false, false]; openSnakeMenu('backpack'); } return; }
     if (k === 'm'){ openSnakeMenu('map'); return; }
-    if (k === 'b'){ openSnakeMenu('craft'); return; }
-    if (k >= '1' && k <= '4'){ if (snakes[0]) snakes[0].slot = parseInt(k, 10) - 1; renderHotbar(); return; }
+    if (k === 'b'){ if (snakeCfg.players === 2) craftPlayer = 0; openSnakeMenu('craft'); return; }
+    if (k >= '1' && k <= '5'){ if (snakes[0]) snakes[0].slot = parseInt(k, 10) - 1; renderHotbar(); return; }
+    if (k === 'q'){ dropSelected(snakeCfg.players === 2 ? (snakes.find(s => s.controls === 'wasd')) : snakes[0]); return; }
   }
   const setDir = (s, nd) => { if (!s || !s.alive) return; if (nd.x === -s.dir.x && nd.y === -s.dir.y) return; s.nextDir = nd; };
   let handled = true;
@@ -2733,7 +2876,7 @@ function snakeKey(e){
     else if (k === 'arrowdown' || k === 's') setDir(s, {x:0,y:1});
     else if (k === 'arrowleft' || k === 'a') setDir(s, {x:-1,y:0});
     else if (k === 'arrowright' || k === 'd') setDir(s, {x:1,y:0});
-    else if (k === ' ' || k === 'f') snakeAttack(s);
+    else if (k === ' ' || k === 'f') attackNearest(s);
     else handled = false;
   } else {
     const p1 = snakes.find(s => s.controls === 'wasd'), p2 = snakes.find(s => s.controls === 'arrows');
@@ -2741,12 +2884,12 @@ function snakeKey(e){
     else if (k === 's') setDir(p1, {x:0,y:1});
     else if (k === 'a') setDir(p1, {x:-1,y:0});
     else if (k === 'd') setDir(p1, {x:1,y:0});
-    else if (k === ' ' || k === 'f') snakeAttack(p1);
+    else if (k === ' ' || k === 'f') attackNearest(p1);
     else if (k === 'arrowup') setDir(p2, {x:0,y:-1});
     else if (k === 'arrowdown') setDir(p2, {x:0,y:1});
     else if (k === 'arrowleft') setDir(p2, {x:-1,y:0});
     else if (k === 'arrowright') setDir(p2, {x:1,y:0});
-    else if (k === '/' || k === 'enter') snakeAttack(p2);
+    else if (k === '/' || k === 'enter') attackNearest(p2);
     else handled = false;
   }
   if (MOVE_KEYS.includes(k)) heldKeys.add(k);   // for Realms stop-and-go
@@ -2759,11 +2902,13 @@ snakeCanvas.addEventListener('touchstart', e => { snakeTouch = e.touches[0]; }, 
 // click on the board to attack: ranged aims at the cursor, melee swings ahead
 snakeCanvas.addEventListener('mousedown', e => {
   if (snakeCfg.mode !== 'realms' || snakeMenuOpen() || sOver || sWin || snakeCfg.players !== 1) return;
-  const s = snakes[0], w = curWeapon(s); if (!s || !w) return;
   const r = snakeCanvas.getBoundingClientRect();
   const gx = Math.floor((e.clientX - r.left) / (r.width / TILES));
   const gy = Math.floor((e.clientY - r.top) / (r.height / TILES));
-  if (w.ranged) shootToward(s, gx, gy); else snakeAttack(s);
+  const gate = walls.find(w => w.x === gx && w.y === gy && w.type === 'gate');
+  if (gate){ gate.open = !gate.open; playBeep(); drawSnake(); return; }   // click a gate to open/close it
+  const s = snakes[0], w = curWeapon(s); if (!s || !w) return;
+  if (w.ranged) shootToward(s, gx, gy); else attackNearest(s);
 });
 snakeCanvas.addEventListener('touchmove', e => {
   if (!snakeTouch || snakeCfg.players !== 1 || snakeMenuOpen()) return;
@@ -2807,7 +2952,7 @@ const ERR_MSGS = [
 ];
 const ERR_TITLES = ["System Error","Fatal Exception","dashboard.exe","Critical Error","Windows","Runtime Error","Warning"];
 let crashing = false, errCount = 0, dragTopZ = 5100, crashClock = null, spawnIv = null, bsodFailed = false;
-const ERR_CAP = 1000;
+const ERR_CAP = 5000;
 
 function triggerCrash(){
   if (crashing) return; crashing = true;
@@ -2901,6 +3046,7 @@ function goRedFlicker(){
   bsodFailed = true;
   const bsod = document.getElementById('crashBSOD');
   bsod.classList.add('failed');
+  document.getElementById('crashTaskbar').classList.add('failed');
   document.querySelector('.bsod-face').textContent = ':(((';
   document.querySelector('.bsod-msg').innerHTML =
     "Recovery failed. Your dashboard could not be repaired and will keep trying. Errors are multiplying out of control.";
